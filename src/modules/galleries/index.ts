@@ -1,0 +1,11 @@
+export * from './models/galleryModel';
+export * from './models/albumModel';
+export * from './models/photoModel';
+export * from './models/favoriteModel';
+export * from './dtos/galleryDTO';
+export * from './repositories/galleryRepository';
+export * from './repositories/albumRepository';
+export * from './repositories/photoRepository';
+export * from './repositories/favoriteRepository';
+export * from './services/galleryService';
+export { default as galleriesRouter } from './routes';
