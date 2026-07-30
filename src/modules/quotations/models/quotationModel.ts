@@ -1,5 +1,5 @@
 import {
-  Table, Column, Model, PrimaryKey, Default, AllowNull, ForeignKey, BelongsTo, HasMany,
+  Table, Column, Model, PrimaryKey, AutoIncrement, Default, AllowNull, ForeignKey, BelongsTo, HasMany,
   DataType, CreatedAt, UpdatedAt, DeletedAt,
 } from 'sequelize-typescript';
 import { Optional } from 'sequelize';
@@ -12,10 +12,10 @@ export const QUOTATION_STATUSES = ['draft', 'sent', 'accepted', 'rejected', 'exp
 export type QuotationStatus = (typeof QUOTATION_STATUSES)[number];
 
 export interface QuotationAttributes {
-  id: string;
+  id: number;
   studioId: string;
-  clientId: string;
-  eventId: string | null;
+  clientId: number;
+  eventId: number | null;
   quoteNumber: string; // Q-2526-000001
   status: QuotationStatus;
   placeOfSupply: string | null; // 2-digit state code
@@ -60,9 +60,9 @@ export interface QuotationCreationAttributes
 })
 export class Quotation extends Model<QuotationAttributes, QuotationCreationAttributes> implements QuotationAttributes {
   @PrimaryKey
-  @Default(DataType.UUIDV4)
-  @Column(DataType.UUID)
-  declare id: string;
+  @AutoIncrement
+  @Column(DataType.INTEGER)
+  declare id: number;
 
   @ForeignKey(() => Studio)
   @AllowNull(false)
@@ -74,15 +74,15 @@ export class Quotation extends Model<QuotationAttributes, QuotationCreationAttri
 
   @ForeignKey(() => Client)
   @AllowNull(false)
-  @Column(DataType.UUID)
-  declare clientId: string;
+  @Column(DataType.INTEGER)
+  declare clientId: number;
 
   @BelongsTo(() => Client, { foreignKey: 'clientId', as: 'client' })
   declare client?: Client;
 
   @ForeignKey(() => Event)
-  @Column(DataType.UUID)
-  declare eventId: string | null;
+  @Column(DataType.INTEGER)
+  declare eventId: number | null;
 
   @BelongsTo(() => Event, { foreignKey: 'eventId', as: 'event' })
   declare event?: Event;

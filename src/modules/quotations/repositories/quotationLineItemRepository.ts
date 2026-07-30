@@ -6,11 +6,11 @@ export class QuotationLineItemRepository {
     return QuotationLineItem.bulkCreate(rows, { transaction: tx });
   }
 
-  static deleteLines(quotationId: string, tx?: Transaction): Promise<number> {
+  static deleteLines(quotationId: number, tx?: Transaction): Promise<number> {
     return QuotationLineItem.destroy({ where: { quotationId }, transaction: tx });
   }
 
-  static findLinesFor(quotationId: string): Promise<QuotationLineItem[]> {
+  static findLinesFor(quotationId: number): Promise<QuotationLineItem[]> {
     return QuotationLineItem.findAll({ where: { quotationId }, order: [['sort_order', 'ASC']] });
   }
 }

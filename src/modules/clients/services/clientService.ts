@@ -22,7 +22,7 @@ export class ClientService {
     }
   }
 
-  static async get(studioId: string, id: string): Promise<ApiResponse> {
+  static async get(studioId: string, id: number): Promise<ApiResponse> {
     try {
       const client = await ClientRepository.findByIdScoped(studioId, id);
       if (!client) return buildError('Client not found', 404);
@@ -46,7 +46,7 @@ export class ClientService {
     }
   }
 
-  static async update(studioId: string, id: string, dto: UpdateClientInput): Promise<ApiResponse> {
+  static async update(studioId: string, id: number, dto: UpdateClientInput): Promise<ApiResponse> {
     try {
       const updated = await ClientRepository.updateScoped(studioId, id, dto);
       if (!updated) return buildError('Client not found', 404);
@@ -56,7 +56,7 @@ export class ClientService {
     }
   }
 
-  static async remove(studioId: string, id: string): Promise<ApiResponse> {
+  static async remove(studioId: string, id: number): Promise<ApiResponse> {
     try {
       const affected = await ClientRepository.softDeleteScoped(studioId, id);
       if (!affected) return buildError('Client not found', 404);
@@ -72,7 +72,7 @@ export class ClientService {
    * not-yet-converted modules (events, quotations) use this to confirm a
    * clientId belongs to the caller's studio before proceeding.
    */
-  static async getScoped(studioId: string, id: string): Promise<Client> {
+  static async getScoped(studioId: string, id: number): Promise<Client> {
     const client = await ClientRepository.findByIdScoped(studioId, id);
     if (!client) throw AppError.notFound('Client not found');
     return client;

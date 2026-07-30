@@ -49,7 +49,7 @@ export const up: Migration = async ({ context: sequelize }) => {
   await qi.addIndex('users', ['email']);
 
   await qi.createTable('otps', {
-    id: { type: DataTypes.UUID, defaultValue: DataTypes.UUIDV4, primaryKey: true },
+    id: { type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true },
     identifier: { type: DataTypes.STRING, allowNull: false },
     otp_hash: { type: DataTypes.STRING, allowNull: false },
     type: { type: DataTypes.ENUM('sms', 'email'), allowNull: false },

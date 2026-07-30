@@ -1,6 +1,5 @@
 import { randomBytes } from 'crypto';
 import bcrypt from 'bcryptjs';
-import { v4 as uuidv4 } from 'uuid';
 import { ApiResponse, buildError, buildSuccess } from '../../../utils/response';
 import { toErrorResponse } from '../../../utils/errorHandler';
 import { buildListResponse } from '../../../utils/pagination';
@@ -82,7 +81,7 @@ const assertActive = (g: Gallery): string | null => {
 };
 
 export class GalleryService {
-  static async create(studioId: string, dto: { eventId?: string; title: string; password?: string; expiresAt?: string }): Promise<ApiResponse> {
+  static async create(studioId: string, dto: { eventId?: number; title: string; password?: string; expiresAt?: string }): Promise<ApiResponse> {
     try {
       const slug = await uniqueSlug(dto.title);
       const passwordHash = dto.password ? await bcrypt.hash(dto.password, 10) : null;
@@ -108,7 +107,7 @@ export class GalleryService {
     }
   }
 
-  static async get(studioId: string, id: string): Promise<ApiResponse> {
+  static async get(studioId: string, id: number): Promise<ApiResponse> {
     try {
       const g = await GalleryRepository.findScoped(studioId, id);
       if (!g) return buildError('Gallery not found', 404);
@@ -126,9 +125,9 @@ export class GalleryService {
     }
   }
 
-  static async update(studioId: string, id: string, dto: {
+  static async update(studioId: string, id: number, dto: {
     title?: string; password?: string | null; expiresAt?: string | null;
-    isActive?: boolean; coverPhotoId?: string | null;
+    isActive?: boolean; coverPhotoId?: number | null;
   }): Promise<ApiResponse> {
     try {
       const g = await GalleryRepository.findScoped(studioId, id);
@@ -147,7 +146,7 @@ export class GalleryService {
     }
   }
 
-  static async remove(studioId: string, id: string): Promise<ApiResponse> {
+  static async remove(studioId: string, id: number): Promise<ApiResponse> {
     try {
       const affected = await GalleryRepository.softDeleteScoped(studioId, id);
       if (!affected) return buildError('Gallery not found', 404);
@@ -158,7 +157,7 @@ export class GalleryService {
   }
 
   // --- albums ---
-  static async addAlbum(studioId: string, galleryId: string, title: string, sortOrder = 0): Promise<ApiResponse> {
+  static async addAlbum(studioId: string, galleryId: number, title: string, sortOrder = 0): Promise<ApiResponse> {
     try {
       const g = await GalleryRepository.findScoped(studioId, galleryId);
       if (!g) return buildError('Gallery not found', 404);
@@ -169,7 +168,7 @@ export class GalleryService {
     }
   }
 
-  static async updateAlbum(studioId: string, id: string, patch: { title?: string; sortOrder?: number }): Promise<ApiResponse> {
+  static async updateAlbum(studioId: string, id: number, patch: { title?: string; sortOrder?: number }): Promise<ApiResponse> {
     try {
       const [affected] = await AlbumRepository.update(studioId, id, patch);
       if (!affected) return buildError('Album not found', 404);
@@ -179,7 +178,7 @@ export class GalleryService {
     }
   }
 
-  static async removeAlbum(studioId: string, id: string): Promise<ApiResponse> {
+  static async removeAlbum(studioId: string, id: number): Promise<ApiResponse> {
     try {
       const affected = await AlbumRepository.deleteScoped(studioId, id);
       if (!affected) return buildError('Album not found', 404);
@@ -190,8 +189,8 @@ export class GalleryService {
   }
 
   // --- photos: two-phase upload ---
-  static async presign(studioId: string, galleryId: string, items: Array<{
-    filename: string; mimeType: string; byteSize: number; albumId?: string;
+  static async presign(studioId: string, galleryId: number, items: Array<{
+    filename: string; mimeType: string; byteSize: number; albumId?: number;
   }>): Promise<ApiResponse> {
     try {
       const g = await GalleryRepository.findScoped(studioId, galleryId);
@@ -203,32 +202,34 @@ export class GalleryService {
         if (it.byteSize > MAX_UPLOAD_BYTES) return buildError(`File exceeds ${MAX_UPLOAD_BYTES} bytes`, 400);
       }
 
-      const prepared = items.map((it) => {
-        const photoId = uuidv4();
-        const ext = it.filename.includes('.') ? it.filename.split('.').pop()! : 'jpg';
-        const s3Key = buildOriginalKey(studioId, galleryId, photoId, ext);
-        return { photoId, s3Key, item: it };
-      });
-
-      // Create draft rows first so a confirm step is meaningful.
-      await PhotoRepository.bulkCreate(prepared.map((p) => ({
-        id: p.photoId,
+      // Photo.id is auto-increment, so it doesn't exist until the row is
+      // inserted — create draft rows with a throwaway key first, then rebuild
+      // the deterministic key from each row's real id and persist it. Relies
+      // on bulkCreate's RETURNING preserving input order (true for a single
+      // multi-row INSERT on Postgres).
+      const created = await PhotoRepository.bulkCreate(items.map((it) => ({
         studioId,
         galleryId,
-        albumId: p.item.albumId ?? null,
-        s3Key: p.s3Key,
-        originalFilename: p.item.filename,
-        mimeType: p.item.mimeType,
-        byteSize: p.item.byteSize,
+        albumId: it.albumId ?? null,
+        s3Key: `pending/${randomBytes(16).toString('hex')}`,
+        originalFilename: it.filename,
+        mimeType: it.mimeType,
+        byteSize: it.byteSize,
         isUploaded: false,
       })) as PhotoCreationAttributes[]);
 
       const uploads = await Promise.all(
-        prepared.map(async (p) => ({
-          photoId: p.photoId,
-          uploadUrl: await presignPut(p.s3Key, p.item.mimeType, p.item.byteSize),
-          s3Key: p.s3Key,
-        }))
+        created.map(async (photo, idx) => {
+          const it = items[idx];
+          const ext = it.filename.includes('.') ? it.filename.split('.').pop()! : 'jpg';
+          const s3Key = buildOriginalKey(studioId, galleryId, photo.id, ext);
+          await PhotoRepository.update(studioId, photo.id, { s3Key });
+          return {
+            photoId: photo.id,
+            uploadUrl: await presignPut(s3Key, it.mimeType, it.byteSize),
+            s3Key,
+          };
+        })
       );
       return buildSuccess({ uploads });
     } catch (error) {
@@ -236,7 +237,7 @@ export class GalleryService {
     }
   }
 
-  static async confirm(studioId: string, galleryId: string, photoIds: string[]): Promise<ApiResponse> {
+  static async confirm(studioId: string, galleryId: number, photoIds: number[]): Promise<ApiResponse> {
     try {
       if (!photoIds.length) return buildSuccess({ confirmed: 0 });
       const [affected] = await PhotoRepository.confirmScoped(studioId, photoIds);
@@ -252,7 +253,7 @@ export class GalleryService {
     }
   }
 
-  static async removePhoto(studioId: string, photoId: string): Promise<ApiResponse> {
+  static async removePhoto(studioId: string, photoId: number): Promise<ApiResponse> {
     try {
       const p = await PhotoRepository.findScoped(studioId, photoId);
       if (!p) return buildError('Photo not found', 404);
@@ -304,7 +305,7 @@ export class GalleryService {
       ]);
       const favIds = clientIdentifier
         ? new Set((await FavoriteRepository.listForClient(g.id, clientIdentifier)).map((f) => f.photoId))
-        : new Set<string>();
+        : new Set<number>();
 
       // Fire-and-forget view increment; a failure here shouldn't block the client.
       GalleryRepository.incrementView(g.id).catch(() => undefined);
@@ -327,7 +328,7 @@ export class GalleryService {
     }
   }
 
-  static async favorite(slug: string, photoId: string, clientIdentifier: string): Promise<ApiResponse> {
+  static async favorite(slug: string, photoId: number, clientIdentifier: string): Promise<ApiResponse> {
     try {
       const g = await GalleryRepository.findBySlug(slug);
       if (!g) return buildError('Gallery not found', 404);
@@ -340,7 +341,7 @@ export class GalleryService {
     }
   }
 
-  static async unfavorite(slug: string, photoId: string, clientIdentifier: string): Promise<ApiResponse> {
+  static async unfavorite(slug: string, photoId: number, clientIdentifier: string): Promise<ApiResponse> {
     try {
       const g = await GalleryRepository.findBySlug(slug);
       if (!g) return buildError('Gallery not found', 404);

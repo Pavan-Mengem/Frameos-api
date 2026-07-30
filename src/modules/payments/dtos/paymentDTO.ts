@@ -1,8 +1,8 @@
-import { IsIn, IsInt, IsOptional, IsPositive, IsString, IsUUID, MaxLength } from 'class-validator';
+import { IsIn, IsInt, IsOptional, IsPositive, IsString, MaxLength } from 'class-validator';
 
 export class CreateOrderDTO {
-  @IsUUID()
-  eventId!: string;
+  @IsInt() @IsPositive()
+  eventId!: number;
 
   @IsIn(['advance', 'balance'])
   kind!: string;
@@ -12,8 +12,8 @@ export class CreateOrderDTO {
 }
 
 export class ManualPaymentDTO {
-  @IsUUID()
-  eventId!: string;
+  @IsInt() @IsPositive()
+  eventId!: number;
 
   @IsInt() @IsPositive()
   amountInr!: number;

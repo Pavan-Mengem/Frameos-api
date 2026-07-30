@@ -4,7 +4,7 @@ import type { Migration } from '../db/migrator';
 export const up: Migration = async ({ context: sequelize }) => {
   const qi = sequelize.getQueryInterface();
   await qi.createTable('leads', {
-    id: { type: DataTypes.UUID, defaultValue: DataTypes.UUIDV4, primaryKey: true },
+    id: { type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true },
     studio_id: {
       type: DataTypes.UUID,
       allowNull: false,
@@ -13,7 +13,7 @@ export const up: Migration = async ({ context: sequelize }) => {
       onDelete: 'CASCADE',
     },
     client_id: {
-      type: DataTypes.UUID,
+      type: DataTypes.INTEGER,
       allowNull: true,
       references: { model: 'clients', key: 'id' },
       onUpdate: 'CASCADE',

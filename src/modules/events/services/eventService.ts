@@ -35,7 +35,7 @@ export class EventService {
     }
   }
 
-  static async getWithDetails(studioId: string, id: string): Promise<ApiResponse> {
+  static async getWithDetails(studioId: string, id: number): Promise<ApiResponse> {
     try {
       const ev = await EventRepository.findByIdScoped(studioId, id);
       if (!ev) return buildError('Event not found', 404);
@@ -46,7 +46,7 @@ export class EventService {
     }
   }
 
-  static async update(studioId: string, id: string, patch: UpdateEventInput): Promise<ApiResponse> {
+  static async update(studioId: string, id: number, patch: UpdateEventInput): Promise<ApiResponse> {
     try {
       const updated = await EventRepository.updateScoped(studioId, id, patch);
       if (!updated) return buildError('Event not found', 404);
@@ -56,7 +56,7 @@ export class EventService {
     }
   }
 
-  static async remove(studioId: string, id: string): Promise<ApiResponse> {
+  static async remove(studioId: string, id: number): Promise<ApiResponse> {
     try {
       const affected = await EventRepository.softDeleteScoped(studioId, id);
       if (!affected) return buildError('Event not found', 404);
@@ -67,7 +67,7 @@ export class EventService {
   }
 
   // --- team ---
-  static async addTeamMember(studioId: string, eventId: string, userId: string, roleOnShoot: TeamRole): Promise<ApiResponse> {
+  static async addTeamMember(studioId: string, eventId: number, userId: string, roleOnShoot: TeamRole): Promise<ApiResponse> {
     try {
       const ev = await EventRepository.findByIdScoped(studioId, eventId); // confirms tenant ownership
       if (!ev) return buildError('Event not found', 404);
@@ -78,7 +78,7 @@ export class EventService {
     }
   }
 
-  static async removeTeamMember(studioId: string, assignmentId: string): Promise<ApiResponse> {
+  static async removeTeamMember(studioId: string, assignmentId: number): Promise<ApiResponse> {
     try {
       const affected = await TeamAssignmentRepository.removeAssignment(studioId, assignmentId);
       if (!affected) return buildError('Assignment not found', 404);

@@ -15,7 +15,7 @@ export class LeadRepository {
     return Lead.create({ ...data, studioId } as unknown as LeadCreationAttributes, { transaction: tx });
   }
 
-  static findByIdScoped(studioId: string, id: string): Promise<Lead | null> {
+  static findByIdScoped(studioId: string, id: number): Promise<Lead | null> {
     return Lead.findOne({ where: tenantScope(studioId, { id }) });
   }
 
@@ -28,12 +28,12 @@ export class LeadRepository {
     });
   }
 
-  static async updateScoped(studioId: string, id: string, patch: UpdateLeadInput & { status?: LeadStatus; clientId?: string | null }): Promise<Lead | null> {
+  static async updateScoped(studioId: string, id: number, patch: UpdateLeadInput & { status?: LeadStatus; clientId?: number | null }): Promise<Lead | null> {
     await Lead.update(patch as unknown as LeadCreationAttributes, { where: tenantScope(studioId, { id }) });
     return LeadRepository.findByIdScoped(studioId, id);
   }
 
-  static softDeleteScoped(studioId: string, id: string): Promise<number> {
+  static softDeleteScoped(studioId: string, id: number): Promise<number> {
     return Lead.destroy({ where: tenantScope(studioId, { id }) });
   }
 

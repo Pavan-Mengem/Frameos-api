@@ -1,9 +1,9 @@
-import { IsDateString, IsEmail, IsIn, IsInt, IsOptional, IsString, IsUUID, Min, MaxLength, MinLength } from 'class-validator';
+import { IsDateString, IsEmail, IsIn, IsInt, IsOptional, IsPositive, IsString, IsUUID, Min, MaxLength, MinLength } from 'class-validator';
 import { LEAD_SOURCES, LEAD_STATUSES } from '../models/leadModel';
 
 export class CreateLeadDTO {
-  @IsOptional() @IsUUID()
-  clientId?: string;
+  @IsOptional() @IsInt() @IsPositive()
+  clientId?: number;
 
   @IsString() @MinLength(1) @MaxLength(200)
   name!: string;
@@ -43,7 +43,7 @@ export class CreateLeadDTO {
 }
 
 export class UpdateLeadDTO {
-  @IsOptional() @IsUUID() clientId?: string;
+  @IsOptional() @IsInt() @IsPositive() clientId?: number;
   @IsOptional() @IsString() @MinLength(1) @MaxLength(200) name?: string;
   @IsOptional() @IsString() @MinLength(8) @MaxLength(20) phone?: string;
   @IsOptional() @IsEmail() email?: string;

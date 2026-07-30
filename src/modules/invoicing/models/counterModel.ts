@@ -1,5 +1,5 @@
 import {
-  Table, Column, Model, PrimaryKey, Default, AllowNull,
+  Table, Column, Model, PrimaryKey, AutoIncrement, Default, AllowNull,
   DataType, CreatedAt, UpdatedAt,
 } from 'sequelize-typescript';
 import { Optional } from 'sequelize';
@@ -8,7 +8,7 @@ export const DOC_TYPES = ['quotation', 'invoice'] as const;
 export type DocType = (typeof DOC_TYPES)[number];
 
 export interface CounterAttributes {
-  id: string;
+  id: number;
   studioId: string;
   docType: DocType;
   fy: string; // e.g. "2526"
@@ -33,9 +33,9 @@ export interface CounterCreationAttributes
 })
 export class Counter extends Model<CounterAttributes, CounterCreationAttributes> implements CounterAttributes {
   @PrimaryKey
-  @Default(DataType.UUIDV4)
-  @Column(DataType.UUID)
-  declare id: string;
+  @AutoIncrement
+  @Column(DataType.INTEGER)
+  declare id: number;
 
   @AllowNull(false)
   @Column(DataType.UUID)

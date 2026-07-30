@@ -1,5 +1,5 @@
 import {
-  Table, Column, Model, PrimaryKey, Default, AllowNull, ForeignKey, BelongsTo, HasMany,
+  Table, Column, Model, PrimaryKey, AutoIncrement, Default, AllowNull, ForeignKey, BelongsTo, HasMany,
   DataType, CreatedAt, UpdatedAt, DeletedAt,
 } from 'sequelize-typescript';
 import { Optional } from 'sequelize';
@@ -10,15 +10,15 @@ import { Photo } from './photoModel';
 import { Favorite } from './favoriteModel';
 
 export interface GalleryAttributes {
-  id: string;
+  id: number;
   studioId: string;
-  eventId: string | null;
+  eventId: number | null;
   title: string;
   slug: string; // public URL segment (unique globally)
   passwordHash: string | null; // null → no password
   expiresAt: Date | null;
   isActive: boolean;
-  coverPhotoId: string | null;
+  coverPhotoId: number | null;
   viewCount: number;
   createdAt?: Date;
   updatedAt?: Date;
@@ -43,9 +43,9 @@ export interface GalleryCreationAttributes
 })
 export class Gallery extends Model<GalleryAttributes, GalleryCreationAttributes> implements GalleryAttributes {
   @PrimaryKey
-  @Default(DataType.UUIDV4)
-  @Column(DataType.UUID)
-  declare id: string;
+  @AutoIncrement
+  @Column(DataType.INTEGER)
+  declare id: number;
 
   @ForeignKey(() => Studio)
   @AllowNull(false)
@@ -56,8 +56,8 @@ export class Gallery extends Model<GalleryAttributes, GalleryCreationAttributes>
   declare studio?: Studio;
 
   @ForeignKey(() => Event)
-  @Column(DataType.UUID)
-  declare eventId: string | null;
+  @Column(DataType.INTEGER)
+  declare eventId: number | null;
 
   @BelongsTo(() => Event, { foreignKey: 'eventId', as: 'event' })
   declare event?: Event;
@@ -81,8 +81,8 @@ export class Gallery extends Model<GalleryAttributes, GalleryCreationAttributes>
   @Column(DataType.BOOLEAN)
   declare isActive: boolean;
 
-  @Column(DataType.UUID)
-  declare coverPhotoId: string | null;
+  @Column(DataType.INTEGER)
+  declare coverPhotoId: number | null;
 
   @AllowNull(false)
   @Default(0)

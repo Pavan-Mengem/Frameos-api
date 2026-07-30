@@ -4,7 +4,7 @@ import type { Migration } from '../db/migrator';
 export const up: Migration = async ({ context: sequelize }) => {
   const qi = sequelize.getQueryInterface();
   await qi.createTable('webhook_events', {
-    id: { type: DataTypes.UUID, defaultValue: DataTypes.UUIDV4, primaryKey: true },
+    id: { type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true },
     provider: { type: DataTypes.STRING, allowNull: false },
     event_id: { type: DataTypes.STRING, allowNull: false },
     event_type: { type: DataTypes.STRING, allowNull: false },

@@ -22,8 +22,8 @@ export interface QuotationLineInput {
 }
 
 export interface CreateQuotationDto {
-  clientId: string;
-  eventId?: string;
+  clientId: number;
+  eventId?: number;
   placeOfSupply?: string; // 2-digit state code; falls back to studio state
   lines: QuotationLineInput[];
   notes?: string;
@@ -163,7 +163,7 @@ export class QuotationService {
     }
   }
 
-  static async get(studioId: string, id: string): Promise<ApiResponse> {
+  static async get(studioId: string, id: number): Promise<ApiResponse> {
     try {
       const q = await QuotationRepository.findByIdScoped(studioId, id);
       if (!q) return buildError('Quotation not found', 404);
@@ -174,7 +174,7 @@ export class QuotationService {
     }
   }
 
-  static async update(studioId: string, id: string, dto: UpdateQuotationDto): Promise<ApiResponse> {
+  static async update(studioId: string, id: number, dto: UpdateQuotationDto): Promise<ApiResponse> {
     try {
       const q = await QuotationRepository.findByIdScoped(studioId, id);
       if (!q) return buildError('Quotation not found', 404);
@@ -250,7 +250,7 @@ export class QuotationService {
     }
   }
 
-  static async send(studioId: string, id: string): Promise<ApiResponse> {
+  static async send(studioId: string, id: number): Promise<ApiResponse> {
     try {
       const q = await QuotationRepository.findByIdScoped(studioId, id);
       if (!q) return buildError('Quotation not found', 404);
@@ -263,7 +263,7 @@ export class QuotationService {
     }
   }
 
-  static async setStatus(studioId: string, id: string, status: QuotationStatus): Promise<ApiResponse> {
+  static async setStatus(studioId: string, id: number, status: QuotationStatus): Promise<ApiResponse> {
     try {
       const q = await QuotationRepository.findByIdScoped(studioId, id);
       if (!q) return buildError('Quotation not found', 404);
@@ -276,7 +276,7 @@ export class QuotationService {
     }
   }
 
-  static async remove(studioId: string, id: string): Promise<ApiResponse> {
+  static async remove(studioId: string, id: number): Promise<ApiResponse> {
     try {
       const affected = await QuotationRepository.softDeleteScoped(studioId, id);
       if (!affected) return buildError('Quotation not found', 404);

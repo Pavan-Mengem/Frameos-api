@@ -1,5 +1,5 @@
 import {
-  Table, Column, Model, PrimaryKey, Default, AllowNull, ForeignKey, BelongsTo, HasMany,
+  Table, Column, Model, PrimaryKey, AutoIncrement, Default, AllowNull, ForeignKey, BelongsTo, HasMany,
   DataType, CreatedAt, UpdatedAt, DeletedAt,
 } from 'sequelize-typescript';
 import { Optional } from 'sequelize';
@@ -9,10 +9,10 @@ import { Album } from './albumModel';
 import { Favorite } from './favoriteModel';
 
 export interface PhotoAttributes {
-  id: string;
+  id: number;
   studioId: string;
-  galleryId: string;
-  albumId: string | null;
+  galleryId: number;
+  albumId: number | null;
   s3Key: string; // originals/{studioId}/{galleryId}/{photoId}.jpg
   s3ThumbKey: string | null; // thumbs/... written by the thumbnail worker
   originalFilename: string | null;
@@ -47,9 +47,9 @@ export interface PhotoCreationAttributes
 })
 export class Photo extends Model<PhotoAttributes, PhotoCreationAttributes> implements PhotoAttributes {
   @PrimaryKey
-  @Default(DataType.UUIDV4)
-  @Column(DataType.UUID)
-  declare id: string;
+  @AutoIncrement
+  @Column(DataType.INTEGER)
+  declare id: number;
 
   @ForeignKey(() => Studio)
   @AllowNull(false)
@@ -61,15 +61,15 @@ export class Photo extends Model<PhotoAttributes, PhotoCreationAttributes> imple
 
   @ForeignKey(() => Gallery)
   @AllowNull(false)
-  @Column(DataType.UUID)
-  declare galleryId: string;
+  @Column(DataType.INTEGER)
+  declare galleryId: number;
 
   @BelongsTo(() => Gallery, { foreignKey: 'galleryId', as: 'gallery' })
   declare gallery?: Gallery;
 
   @ForeignKey(() => Album)
-  @Column(DataType.UUID)
-  declare albumId: string | null;
+  @Column(DataType.INTEGER)
+  declare albumId: number | null;
 
   @BelongsTo(() => Album, { foreignKey: 'albumId', as: 'album' })
   declare album?: Album;

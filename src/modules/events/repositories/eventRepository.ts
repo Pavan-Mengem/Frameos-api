@@ -15,7 +15,7 @@ export class EventRepository {
     return Event.create({ ...data, studioId } as unknown as EventCreationAttributes, { transaction: tx });
   }
 
-  static findByIdScoped(studioId: string, id: string): Promise<Event | null> {
+  static findByIdScoped(studioId: string, id: number): Promise<Event | null> {
     return Event.findOne({ where: tenantScope(studioId, { id }) });
   }
 
@@ -28,12 +28,12 @@ export class EventRepository {
     });
   }
 
-  static async updateScoped(studioId: string, id: string, patch: UpdateEventInput): Promise<Event | null> {
+  static async updateScoped(studioId: string, id: number, patch: UpdateEventInput): Promise<Event | null> {
     await Event.update(patch as unknown as EventCreationAttributes, { where: tenantScope(studioId, { id }) });
     return EventRepository.findByIdScoped(studioId, id);
   }
 
-  static softDeleteScoped(studioId: string, id: string): Promise<number> {
+  static softDeleteScoped(studioId: string, id: number): Promise<number> {
     return Event.destroy({ where: tenantScope(studioId, { id }) });
   }
 
@@ -42,7 +42,7 @@ export class EventRepository {
    * Uses a raw increment so concurrent captures on the same event never race
    * to a stale read-modify-write.
    */
-  static addPaid(studioId: string, id: string, deltaInr: number, tx?: Transaction) {
+  static addPaid(studioId: string, id: number, deltaInr: number, tx?: Transaction) {
     return Event.increment({ paidInr: deltaInr }, { where: tenantScope(studioId, { id }), transaction: tx });
   }
 

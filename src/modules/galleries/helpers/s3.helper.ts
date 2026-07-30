@@ -59,5 +59,5 @@ export const deleteObjects = async (keys: string[]) => {
 };
 
 /** Deterministic S3 key so redelivery of the same photoId can't collide. */
-export const buildOriginalKey = (studioId: string, galleryId: string, photoId: string, ext: string) =>
+export const buildOriginalKey = (studioId: string, galleryId: number, photoId: number, ext: string) =>
   `originals/${studioId}/${galleryId}/${photoId}${ext ? `.${ext.replace(/^\./, '')}` : ''}`;

@@ -6,7 +6,8 @@ import { authorize } from '../../../middleware/authorize';
 import { validateDto } from '../../../middleware/validateDto';
 import { sendResponse } from '../../../utils/response';
 import { buildQueryOptions } from '../../../utils/queryBuilder';
-import { CreateEventDTO, UpdateEventDTO, AddTeamMemberDTO } from '../dtos/eventDTO';
+import { IdParamDTO } from '../../../utils/paramDTOs';
+import { CreateEventDTO, UpdateEventDTO, AddTeamMemberDTO, EventTeamAssignmentParamsDTO } from '../dtos/eventDTO';
 import { TeamRole } from '../models/teamAssignmentModel';
 
 const router = Router();
@@ -42,29 +43,34 @@ router.post('/', validateDto(CreateEventDTO), async (req: Request, res: Response
   sendResponse(res, result);
 });
 
-router.get('/:id', async (req: Request, res: Response) => {
-  const result = await EventService.getWithDetails(req.user.studioId, req.params.id);
+router.get('/:id', validateDto(IdParamDTO, 'params'), async (req: Request, res: Response) => {
+  const { id } = req.params as unknown as IdParamDTO;
+  const result = await EventService.getWithDetails(req.user.studioId, id);
   sendResponse(res, result);
 });
 
-router.patch('/:id', validateDto(UpdateEventDTO), async (req: Request, res: Response) => {
-  const result = await EventService.update(req.user.studioId, req.params.id, req.body);
+router.patch('/:id', validateDto(IdParamDTO, 'params'), validateDto(UpdateEventDTO), async (req: Request, res: Response) => {
+  const { id } = req.params as unknown as IdParamDTO;
+  const result = await EventService.update(req.user.studioId, id, req.body);
   sendResponse(res, result);
 });
 
-router.delete('/:id', authorize('owner', 'admin'), async (req: Request, res: Response) => {
-  const result = await EventService.remove(req.user.studioId, req.params.id);
+router.delete('/:id', authorize('owner', 'admin'), validateDto(IdParamDTO, 'params'), async (req: Request, res: Response) => {
+  const { id } = req.params as unknown as IdParamDTO;
+  const result = await EventService.remove(req.user.studioId, id);
   sendResponse(res, result);
 });
 
 router.post(
   '/:id/team',
   authorize('owner', 'admin'),
+  validateDto(IdParamDTO, 'params'),
   validateDto(AddTeamMemberDTO),
   async (req: Request, res: Response) => {
+    const { id } = req.params as unknown as IdParamDTO;
     const result = await EventService.addTeamMember(
       req.user.studioId,
-      req.params.id,
+      id,
       req.body.userId,
       req.body.roleOnShoot as TeamRole
     );
@@ -72,9 +78,15 @@ router.post(
   }
 );
 
-router.delete('/:id/team/:assignmentId', authorize('owner', 'admin'), async (req: Request, res: Response) => {
-  const result = await EventService.removeTeamMember(req.user.studioId, req.params.assignmentId);
-  sendResponse(res, result);
-});
+router.delete(
+  '/:id/team/:assignmentId',
+  authorize('owner', 'admin'),
+  validateDto(EventTeamAssignmentParamsDTO, 'params'),
+  async (req: Request, res: Response) => {
+    const { assignmentId } = req.params as unknown as EventTeamAssignmentParamsDTO;
+    const result = await EventService.removeTeamMember(req.user.studioId, assignmentId);
+    sendResponse(res, result);
+  }
+);
 
 export default router;

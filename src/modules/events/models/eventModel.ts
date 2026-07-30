@@ -1,5 +1,5 @@
 import {
-  Table, Column, Model, PrimaryKey, Default, AllowNull, ForeignKey, BelongsTo, HasMany,
+  Table, Column, Model, PrimaryKey, AutoIncrement, Default, AllowNull, ForeignKey, BelongsTo, HasMany,
   DataType, CreatedAt, UpdatedAt, DeletedAt,
 } from 'sequelize-typescript';
 import { Optional } from 'sequelize';
@@ -16,10 +16,10 @@ export const EVENT_STATUSES = ['upcoming', 'in_progress', 'delivered', 'cancelle
 export type EventStatus = (typeof EVENT_STATUSES)[number];
 
 export interface EventAttributes {
-  id: string;
+  id: number;
   studioId: string;
-  clientId: string;
-  leadId: string | null;
+  clientId: number;
+  leadId: number | null;
   title: string;
   eventType: string | null; // wedding | pre_wedding | event | portrait | other
   eventDate: Date;
@@ -53,9 +53,9 @@ export interface EventCreationAttributes
 })
 export class Event extends Model<EventAttributes, EventCreationAttributes> implements EventAttributes {
   @PrimaryKey
-  @Default(DataType.UUIDV4)
-  @Column(DataType.UUID)
-  declare id: string;
+  @AutoIncrement
+  @Column(DataType.INTEGER)
+  declare id: number;
 
   @ForeignKey(() => Studio)
   @AllowNull(false)
@@ -67,15 +67,15 @@ export class Event extends Model<EventAttributes, EventCreationAttributes> imple
 
   @ForeignKey(() => Client)
   @AllowNull(false)
-  @Column(DataType.UUID)
-  declare clientId: string;
+  @Column(DataType.INTEGER)
+  declare clientId: number;
 
   @BelongsTo(() => Client, { foreignKey: 'clientId', as: 'client' })
   declare client?: Client;
 
   @ForeignKey(() => Lead)
-  @Column(DataType.UUID)
-  declare leadId: string | null;
+  @Column(DataType.INTEGER)
+  declare leadId: number | null;
 
   @BelongsTo(() => Lead, { foreignKey: 'leadId', as: 'lead' })
   declare lead?: Lead;

@@ -1,5 +1,5 @@
 import {
-  Table, Column, Model, PrimaryKey, Default, AllowNull, ForeignKey, BelongsTo,
+  Table, Column, Model, PrimaryKey, AutoIncrement, Default, AllowNull, ForeignKey, BelongsTo,
   DataType, CreatedAt, UpdatedAt,
 } from 'sequelize-typescript';
 import { Optional } from 'sequelize';
@@ -8,10 +8,10 @@ import { Event } from '../../events/models/eventModel';
 import { Payment } from './paymentModel';
 
 export interface InvoiceAttributes {
-  id: string;
+  id: number;
   studioId: string;
-  eventId: string;
-  paymentId: string;
+  eventId: number;
+  paymentId: number;
   invoiceNumber: string; // INV-2526-000001
   issuedAt: Date;
   placeOfSupply: string | null;
@@ -47,9 +47,9 @@ export interface InvoiceCreationAttributes
 })
 export class Invoice extends Model<InvoiceAttributes, InvoiceCreationAttributes> implements InvoiceAttributes {
   @PrimaryKey
-  @Default(DataType.UUIDV4)
-  @Column(DataType.UUID)
-  declare id: string;
+  @AutoIncrement
+  @Column(DataType.INTEGER)
+  declare id: number;
 
   @ForeignKey(() => Studio)
   @AllowNull(false)
@@ -61,16 +61,16 @@ export class Invoice extends Model<InvoiceAttributes, InvoiceCreationAttributes>
 
   @ForeignKey(() => Event)
   @AllowNull(false)
-  @Column(DataType.UUID)
-  declare eventId: string;
+  @Column(DataType.INTEGER)
+  declare eventId: number;
 
   @BelongsTo(() => Event, { foreignKey: 'eventId', as: 'event' })
   declare event?: Event;
 
   @ForeignKey(() => Payment)
   @AllowNull(false)
-  @Column(DataType.UUID)
-  declare paymentId: string;
+  @Column(DataType.INTEGER)
+  declare paymentId: number;
 
   @BelongsTo(() => Payment, { foreignKey: 'paymentId', as: 'payment' })
   declare payment?: Payment;

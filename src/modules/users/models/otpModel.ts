@@ -1,5 +1,5 @@
 import {
-  Table, Column, Model, PrimaryKey, Default, AllowNull,
+  Table, Column, Model, PrimaryKey, AutoIncrement, Default, AllowNull,
   DataType, CreatedAt, UpdatedAt,
 } from 'sequelize-typescript';
 import { Optional } from 'sequelize';
@@ -8,7 +8,7 @@ export const OTP_TYPES = ['sms', 'email'] as const;
 export type OtpType = (typeof OTP_TYPES)[number];
 
 export interface OtpAttributes {
-  id: string;
+  id: number;
   identifier: string; // phone or email
   otpHash: string;
   type: OtpType;
@@ -31,9 +31,9 @@ export interface OtpCreationAttributes
 })
 export class Otp extends Model<OtpAttributes, OtpCreationAttributes> implements OtpAttributes {
   @PrimaryKey
-  @Default(DataType.UUIDV4)
-  @Column(DataType.UUID)
-  declare id: string;
+  @AutoIncrement
+  @Column(DataType.INTEGER)
+  declare id: number;
 
   @AllowNull(false)
   @Column(DataType.STRING)

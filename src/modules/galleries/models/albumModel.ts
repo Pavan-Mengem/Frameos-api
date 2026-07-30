@@ -1,5 +1,5 @@
 import {
-  Table, Column, Model, PrimaryKey, Default, AllowNull, ForeignKey, BelongsTo, HasMany,
+  Table, Column, Model, PrimaryKey, AutoIncrement, Default, AllowNull, ForeignKey, BelongsTo, HasMany,
   DataType, CreatedAt, UpdatedAt,
 } from 'sequelize-typescript';
 import { Optional } from 'sequelize';
@@ -8,9 +8,9 @@ import { Gallery } from './galleryModel';
 import { Photo } from './photoModel';
 
 export interface AlbumAttributes {
-  id: string;
+  id: number;
   studioId: string;
-  galleryId: string;
+  galleryId: number;
   title: string;
   sortOrder: number;
   createdAt?: Date;
@@ -29,9 +29,9 @@ export interface AlbumCreationAttributes
 })
 export class Album extends Model<AlbumAttributes, AlbumCreationAttributes> implements AlbumAttributes {
   @PrimaryKey
-  @Default(DataType.UUIDV4)
-  @Column(DataType.UUID)
-  declare id: string;
+  @AutoIncrement
+  @Column(DataType.INTEGER)
+  declare id: number;
 
   @ForeignKey(() => Studio)
   @AllowNull(false)
@@ -43,8 +43,8 @@ export class Album extends Model<AlbumAttributes, AlbumCreationAttributes> imple
 
   @ForeignKey(() => Gallery)
   @AllowNull(false)
-  @Column(DataType.UUID)
-  declare galleryId: string;
+  @Column(DataType.INTEGER)
+  declare galleryId: number;
 
   @BelongsTo(() => Gallery, { foreignKey: 'galleryId', as: 'gallery' })
   declare gallery?: Gallery;

@@ -1,6 +1,6 @@
 import { Type } from 'class-transformer';
 import {
-  IsArray, IsDateString, IsIn, IsInt, IsOptional, IsString, IsUUID, Matches, MaxLength, Min,
+  IsArray, IsDateString, IsIn, IsInt, IsOptional, IsPositive, IsString, Matches, MaxLength, Min,
   MinLength, ValidateNested,
 } from 'class-validator';
 
@@ -27,11 +27,11 @@ export class QuotationLineInputDTO {
 }
 
 export class CreateQuotationDTO {
-  @IsUUID()
-  clientId!: string;
+  @IsInt() @IsPositive()
+  clientId!: number;
 
-  @IsOptional() @IsUUID()
-  eventId?: string;
+  @IsOptional() @IsInt() @IsPositive()
+  eventId?: number;
 
   @IsOptional() @IsString() @Matches(/^\d{2}$/, { message: 'state code = 2 digits' })
   placeOfSupply?: string;
@@ -50,8 +50,8 @@ export class CreateQuotationDTO {
 }
 
 export class UpdateQuotationDTO {
-  @IsOptional() @IsUUID() clientId?: string;
-  @IsOptional() @IsUUID() eventId?: string;
+  @IsOptional() @IsInt() @IsPositive() clientId?: number;
+  @IsOptional() @IsInt() @IsPositive() eventId?: number;
   @IsOptional() @IsString() @Matches(/^\d{2}$/, { message: 'state code = 2 digits' }) placeOfSupply?: string;
   @IsOptional() @IsArray() @ValidateNested({ each: true }) @Type(() => QuotationLineInputDTO) lines?: QuotationLineInputDTO[];
   @IsOptional() @IsString() @MaxLength(2000) notes?: string;

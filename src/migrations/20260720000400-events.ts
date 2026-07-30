@@ -5,7 +5,7 @@ export const up: Migration = async ({ context: sequelize }) => {
   const qi = sequelize.getQueryInterface();
 
   await qi.createTable('events', {
-    id: { type: DataTypes.UUID, defaultValue: DataTypes.UUIDV4, primaryKey: true },
+    id: { type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true },
     studio_id: {
       type: DataTypes.UUID,
       allowNull: false,
@@ -14,14 +14,14 @@ export const up: Migration = async ({ context: sequelize }) => {
       onDelete: 'CASCADE',
     },
     client_id: {
-      type: DataTypes.UUID,
+      type: DataTypes.INTEGER,
       allowNull: false,
       references: { model: 'clients', key: 'id' },
       onUpdate: 'CASCADE',
       onDelete: 'RESTRICT',
     },
     lead_id: {
-      type: DataTypes.UUID,
+      type: DataTypes.INTEGER,
       allowNull: true,
       references: { model: 'leads', key: 'id' },
       onUpdate: 'CASCADE',
@@ -50,7 +50,7 @@ export const up: Migration = async ({ context: sequelize }) => {
   await qi.addIndex('events', ['studio_id', 'client_id']);
 
   await qi.createTable('team_assignments', {
-    id: { type: DataTypes.UUID, defaultValue: DataTypes.UUIDV4, primaryKey: true },
+    id: { type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true },
     studio_id: {
       type: DataTypes.UUID,
       allowNull: false,
@@ -59,7 +59,7 @@ export const up: Migration = async ({ context: sequelize }) => {
       onDelete: 'CASCADE',
     },
     event_id: {
-      type: DataTypes.UUID,
+      type: DataTypes.INTEGER,
       allowNull: false,
       references: { model: 'events', key: 'id' },
       onUpdate: 'CASCADE',

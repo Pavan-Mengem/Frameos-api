@@ -10,7 +10,7 @@ export class GalleryRepository {
     return Gallery.create({ ...data, studioId } as GalleryCreationAttributes, { transaction: tx });
   }
 
-  static findScoped(studioId: string, id: string): Promise<Gallery | null> {
+  static findScoped(studioId: string, id: number): Promise<Gallery | null> {
     return Gallery.findOne({ where: tenantScope(studioId, { id }) });
   }
 
@@ -27,15 +27,15 @@ export class GalleryRepository {
     });
   }
 
-  static update(studioId: string, id: string, patch: Partial<GalleryAttributes>) {
+  static update(studioId: string, id: number, patch: Partial<GalleryAttributes>) {
     return Gallery.update(patch, { where: tenantScope(studioId, { id }) });
   }
 
-  static softDeleteScoped(studioId: string, id: string): Promise<number> {
+  static softDeleteScoped(studioId: string, id: number): Promise<number> {
     return Gallery.destroy({ where: tenantScope(studioId, { id }) });
   }
 
-  static incrementView(id: string) {
+  static incrementView(id: number) {
     return Gallery.increment({ viewCount: 1 }, { where: { id } });
   }
 

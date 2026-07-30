@@ -1,5 +1,5 @@
 import {
-  Table, Column, Model, PrimaryKey, Default, AllowNull, ForeignKey, BelongsTo,
+  Table, Column, Model, PrimaryKey, AutoIncrement, AllowNull, ForeignKey, BelongsTo,
   DataType, CreatedAt,
 } from 'sequelize-typescript';
 import { Optional } from 'sequelize';
@@ -8,10 +8,10 @@ import { Gallery } from './galleryModel';
 import { Photo } from './photoModel';
 
 export interface FavoriteAttributes {
-  id: string;
+  id: number;
   studioId: string;
-  galleryId: string;
-  photoId: string;
+  galleryId: number;
+  photoId: number;
   clientIdentifier: string; // opaque token from browser localStorage
   createdAt?: Date;
 }
@@ -33,9 +33,9 @@ export interface FavoriteCreationAttributes
 })
 export class Favorite extends Model<FavoriteAttributes, FavoriteCreationAttributes> implements FavoriteAttributes {
   @PrimaryKey
-  @Default(DataType.UUIDV4)
-  @Column(DataType.UUID)
-  declare id: string;
+  @AutoIncrement
+  @Column(DataType.INTEGER)
+  declare id: number;
 
   @ForeignKey(() => Studio)
   @AllowNull(false)
@@ -47,16 +47,16 @@ export class Favorite extends Model<FavoriteAttributes, FavoriteCreationAttribut
 
   @ForeignKey(() => Gallery)
   @AllowNull(false)
-  @Column(DataType.UUID)
-  declare galleryId: string;
+  @Column(DataType.INTEGER)
+  declare galleryId: number;
 
   @BelongsTo(() => Gallery, { foreignKey: 'galleryId', as: 'gallery' })
   declare gallery?: Gallery;
 
   @ForeignKey(() => Photo)
   @AllowNull(false)
-  @Column(DataType.UUID)
-  declare photoId: string;
+  @Column(DataType.INTEGER)
+  declare photoId: number;
 
   @BelongsTo(() => Photo, { foreignKey: 'photoId', as: 'photo' })
   declare photo?: Photo;

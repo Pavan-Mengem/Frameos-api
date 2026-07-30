@@ -1,13 +1,13 @@
 import {
-  Table, Column, Model, PrimaryKey, Default, AllowNull, ForeignKey, BelongsTo,
+  Table, Column, Model, PrimaryKey, AutoIncrement, Default, AllowNull, ForeignKey, BelongsTo,
   DataType,
 } from 'sequelize-typescript';
 import { Optional } from 'sequelize';
 import { Quotation } from './quotationModel';
 
 export interface QuotationLineItemAttributes {
-  id: string;
-  quotationId: string;
+  id: number;
+  quotationId: number;
   hsnSac: string | null; // e.g. "998387"
   description: string;
   quantity: number;
@@ -33,14 +33,14 @@ export interface QuotationLineItemCreationAttributes
 })
 export class QuotationLineItem extends Model<QuotationLineItemAttributes, QuotationLineItemCreationAttributes> implements QuotationLineItemAttributes {
   @PrimaryKey
-  @Default(DataType.UUIDV4)
-  @Column(DataType.UUID)
-  declare id: string;
+  @AutoIncrement
+  @Column(DataType.INTEGER)
+  declare id: number;
 
   @ForeignKey(() => Quotation)
   @AllowNull(false)
-  @Column(DataType.UUID)
-  declare quotationId: string;
+  @Column(DataType.INTEGER)
+  declare quotationId: number;
 
   @BelongsTo(() => Quotation, { foreignKey: 'quotationId', as: 'quotation' })
   declare quotation?: Quotation;

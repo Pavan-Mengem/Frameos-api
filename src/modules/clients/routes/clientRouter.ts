@@ -4,6 +4,7 @@ import { authenticate } from '../../../middleware/authenticate';
 import { validateDto } from '../../../middleware/validateDto';
 import { sendResponse } from '../../../utils/response';
 import { buildQueryOptions } from '../../../utils/queryBuilder';
+import { IdParamDTO } from '../../../utils/paramDTOs';
 import { CreateClientDTO, UpdateClientDTO } from '../dtos/clientDTO';
 
 const router = Router();
@@ -26,18 +27,21 @@ router.post('/', validateDto(CreateClientDTO), async (req: Request, res: Respons
   sendResponse(res, result);
 });
 
-router.get('/:id', async (req: Request, res: Response) => {
-  const result = await ClientService.get(req.user.studioId, req.params.id);
+router.get('/:id', validateDto(IdParamDTO, 'params'), async (req: Request, res: Response) => {
+  const { id } = req.params as unknown as IdParamDTO;
+  const result = await ClientService.get(req.user.studioId, id);
   sendResponse(res, result);
 });
 
-router.patch('/:id', validateDto(UpdateClientDTO), async (req: Request, res: Response) => {
-  const result = await ClientService.update(req.user.studioId, req.params.id, req.body);
+router.patch('/:id', validateDto(IdParamDTO, 'params'), validateDto(UpdateClientDTO), async (req: Request, res: Response) => {
+  const { id } = req.params as unknown as IdParamDTO;
+  const result = await ClientService.update(req.user.studioId, id, req.body);
   sendResponse(res, result);
 });
 
-router.delete('/:id', async (req: Request, res: Response) => {
-  const result = await ClientService.remove(req.user.studioId, req.params.id);
+router.delete('/:id', validateDto(IdParamDTO, 'params'), async (req: Request, res: Response) => {
+  const { id } = req.params as unknown as IdParamDTO;
+  const result = await ClientService.remove(req.user.studioId, id);
   sendResponse(res, result);
 });
 

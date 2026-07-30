@@ -5,6 +5,7 @@ import { authenticate } from '../../../middleware/authenticate';
 import { validateDto } from '../../../middleware/validateDto';
 import { sendResponse } from '../../../utils/response';
 import { buildQueryOptions } from '../../../utils/queryBuilder';
+import { IdParamDTO } from '../../../utils/paramDTOs';
 import { CreateQuotationDTO, UpdateQuotationDTO, SetQuotationStatusDTO } from '../dtos/quotationDTO';
 import { QuotationStatus } from '../models/quotationModel';
 
@@ -41,28 +42,33 @@ router.post('/', validateDto(CreateQuotationDTO), async (req: Request, res: Resp
   sendResponse(res, result);
 });
 
-router.get('/:id', async (req: Request, res: Response) => {
-  const result = await QuotationService.get(req.user.studioId, req.params.id);
+router.get('/:id', validateDto(IdParamDTO, 'params'), async (req: Request, res: Response) => {
+  const { id } = req.params as unknown as IdParamDTO;
+  const result = await QuotationService.get(req.user.studioId, id);
   sendResponse(res, result);
 });
 
-router.patch('/:id', validateDto(UpdateQuotationDTO), async (req: Request, res: Response) => {
-  const result = await QuotationService.update(req.user.studioId, req.params.id, req.body);
+router.patch('/:id', validateDto(IdParamDTO, 'params'), validateDto(UpdateQuotationDTO), async (req: Request, res: Response) => {
+  const { id } = req.params as unknown as IdParamDTO;
+  const result = await QuotationService.update(req.user.studioId, id, req.body);
   sendResponse(res, result);
 });
 
-router.post('/:id/send', async (req: Request, res: Response) => {
-  const result = await QuotationService.send(req.user.studioId, req.params.id);
+router.post('/:id/send', validateDto(IdParamDTO, 'params'), async (req: Request, res: Response) => {
+  const { id } = req.params as unknown as IdParamDTO;
+  const result = await QuotationService.send(req.user.studioId, id);
   sendResponse(res, result);
 });
 
-router.patch('/:id/status', validateDto(SetQuotationStatusDTO), async (req: Request, res: Response) => {
-  const result = await QuotationService.setStatus(req.user.studioId, req.params.id, req.body.status as QuotationStatus);
+router.patch('/:id/status', validateDto(IdParamDTO, 'params'), validateDto(SetQuotationStatusDTO), async (req: Request, res: Response) => {
+  const { id } = req.params as unknown as IdParamDTO;
+  const result = await QuotationService.setStatus(req.user.studioId, id, req.body.status as QuotationStatus);
   sendResponse(res, result);
 });
 
-router.delete('/:id', async (req: Request, res: Response) => {
-  const result = await QuotationService.remove(req.user.studioId, req.params.id);
+router.delete('/:id', validateDto(IdParamDTO, 'params'), async (req: Request, res: Response) => {
+  const { id } = req.params as unknown as IdParamDTO;
+  const result = await QuotationService.remove(req.user.studioId, id);
   sendResponse(res, result);
 });
 

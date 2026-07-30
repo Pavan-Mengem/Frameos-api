@@ -1,13 +1,15 @@
-import { IsDateString, IsIn, IsInt, IsOptional, IsString, IsUUID, Min, MaxLength, MinLength } from 'class-validator';
+import { Type } from 'class-transformer';
+import { IsDateString, IsIn, IsInt, IsOptional, IsPositive, IsString, IsUUID, Min, MaxLength, MinLength } from 'class-validator';
 import { EVENT_STATUSES } from '../models/eventModel';
 import { TEAM_ROLES } from '../models/teamAssignmentModel';
+import { IdParamDTO } from '../../../utils/paramDTOs';
 
 export class CreateEventDTO {
-  @IsUUID()
-  clientId!: string;
+  @IsInt() @IsPositive()
+  clientId!: number;
 
-  @IsOptional() @IsUUID()
-  leadId?: string;
+  @IsOptional() @IsInt() @IsPositive()
+  leadId?: number;
 
   @IsString() @MinLength(1) @MaxLength(200)
   title!: string;
@@ -35,8 +37,8 @@ export class CreateEventDTO {
 }
 
 export class UpdateEventDTO {
-  @IsOptional() @IsUUID() clientId?: string;
-  @IsOptional() @IsUUID() leadId?: string;
+  @IsOptional() @IsInt() @IsPositive() clientId?: number;
+  @IsOptional() @IsInt() @IsPositive() leadId?: number;
   @IsOptional() @IsString() @MinLength(1) @MaxLength(200) title?: string;
   @IsOptional() @IsString() @MaxLength(50) eventType?: string;
   @IsOptional() @IsDateString() eventDate?: string;
@@ -53,4 +55,10 @@ export class AddTeamMemberDTO {
 
   @IsIn(TEAM_ROLES)
   roleOnShoot!: string;
+}
+
+export class EventTeamAssignmentParamsDTO extends IdParamDTO {
+  @Type(() => Number)
+  @IsInt() @IsPositive()
+  assignmentId!: number;
 }

@@ -10,7 +10,7 @@ export class PaymentRepository {
     return Payment.create({ ...data, studioId } as unknown as PaymentCreationAttributes, { transaction: tx });
   }
 
-  static findByIdScoped(studioId: string, id: string): Promise<Payment | null> {
+  static findByIdScoped(studioId: string, id: number): Promise<Payment | null> {
     return Payment.findOne({ where: tenantScope(studioId, { id }) });
   }
 
@@ -18,7 +18,7 @@ export class PaymentRepository {
     return Payment.findOne({ where: { gatewayOrderId } });
   }
 
-  static update(studioId: string, id: string, patch: Partial<CreatePaymentInput> & { invoiceId?: string }, tx?: Transaction) {
+  static update(studioId: string, id: number, patch: Partial<CreatePaymentInput> & { invoiceId?: number }, tx?: Transaction) {
     return Payment.update(patch as unknown as PaymentCreationAttributes, { where: tenantScope(studioId, { id }), transaction: tx });
   }
 

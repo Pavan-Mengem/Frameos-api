@@ -1,5 +1,5 @@
 import {
-  Table, Column, Model, PrimaryKey, Default, AllowNull, ForeignKey, BelongsTo, HasOne,
+  Table, Column, Model, PrimaryKey, AutoIncrement, Default, AllowNull, ForeignKey, BelongsTo, HasOne,
   DataType, CreatedAt, UpdatedAt, DeletedAt,
 } from 'sequelize-typescript';
 import { Optional } from 'sequelize';
@@ -20,9 +20,9 @@ export const PAYMENT_STATUSES = ['created', 'paid', 'failed', 'refunded'] as con
 export type PaymentStatus = (typeof PAYMENT_STATUSES)[number];
 
 export interface PaymentAttributes {
-  id: string;
+  id: number;
   studioId: string;
-  eventId: string;
+  eventId: number;
   kind: PaymentKind;
   amountInr: number; // integer ₹ (paise-safe on Razorpay boundary)
   currency: string;
@@ -33,7 +33,7 @@ export interface PaymentAttributes {
   status: PaymentStatus;
   capturedAt: Date | null;
   notes: string | null;
-  invoiceId: string | null;
+  invoiceId: number | null;
   createdAt?: Date;
   updatedAt?: Date;
   deletedAt?: Date | null;
@@ -59,9 +59,9 @@ export interface PaymentCreationAttributes
 })
 export class Payment extends Model<PaymentAttributes, PaymentCreationAttributes> implements PaymentAttributes {
   @PrimaryKey
-  @Default(DataType.UUIDV4)
-  @Column(DataType.UUID)
-  declare id: string;
+  @AutoIncrement
+  @Column(DataType.INTEGER)
+  declare id: number;
 
   @ForeignKey(() => Studio)
   @AllowNull(false)
@@ -73,8 +73,8 @@ export class Payment extends Model<PaymentAttributes, PaymentCreationAttributes>
 
   @ForeignKey(() => Event)
   @AllowNull(false)
-  @Column(DataType.UUID)
-  declare eventId: string;
+  @Column(DataType.INTEGER)
+  declare eventId: number;
 
   @BelongsTo(() => Event, { foreignKey: 'eventId', as: 'event' })
   declare event?: Event;
@@ -116,8 +116,8 @@ export class Payment extends Model<PaymentAttributes, PaymentCreationAttributes>
   @Column(DataType.TEXT)
   declare notes: string | null;
 
-  @Column(DataType.UUID)
-  declare invoiceId: string | null;
+  @Column(DataType.INTEGER)
+  declare invoiceId: number | null;
 
   @CreatedAt declare createdAt: Date;
   @UpdatedAt declare updatedAt: Date;

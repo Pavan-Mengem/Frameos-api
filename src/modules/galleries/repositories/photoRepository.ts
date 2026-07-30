@@ -7,14 +7,14 @@ export class PhotoRepository {
     return Photo.bulkCreate(rows, { transaction: tx });
   }
 
-  static confirmScoped(studioId: string, ids: string[]) {
+  static confirmScoped(studioId: string, ids: number[]) {
     return Photo.update(
       { isUploaded: true },
       { where: tenantScope(studioId, { id: { [Op.in]: ids } }) }
     );
   }
 
-  static listForGallery(studioId: string, galleryId: string, onlyUploaded = true): Promise<Photo[]> {
+  static listForGallery(studioId: string, galleryId: number, onlyUploaded = true): Promise<Photo[]> {
     return Photo.findAll({
       where: tenantScope(studioId, {
         galleryId,
@@ -24,15 +24,15 @@ export class PhotoRepository {
     });
   }
 
-  static findScoped(studioId: string, id: string): Promise<Photo | null> {
+  static findScoped(studioId: string, id: number): Promise<Photo | null> {
     return Photo.findOne({ where: tenantScope(studioId, { id }) });
   }
 
-  static update(studioId: string, id: string, patch: Partial<PhotoAttributes>) {
+  static update(studioId: string, id: number, patch: Partial<PhotoAttributes>) {
     return Photo.update(patch, { where: tenantScope(studioId, { id }) });
   }
 
-  static softDeleteScoped(studioId: string, id: string): Promise<number> {
+  static softDeleteScoped(studioId: string, id: number): Promise<number> {
     return Photo.destroy({ where: tenantScope(studioId, { id }) });
   }
 }

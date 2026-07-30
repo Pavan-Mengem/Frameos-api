@@ -1,5 +1,5 @@
 import {
-  Table, Column, Model, PrimaryKey, Default, AllowNull, ForeignKey, BelongsTo,
+  Table, Column, Model, PrimaryKey, AutoIncrement, AllowNull, ForeignKey, BelongsTo,
   DataType, CreatedAt, UpdatedAt,
 } from 'sequelize-typescript';
 import { Optional } from 'sequelize';
@@ -11,9 +11,9 @@ export const TEAM_ROLES = ['lead_photographer', 'photographer', 'editor', 'assis
 export type TeamRole = (typeof TEAM_ROLES)[number];
 
 export interface TeamAssignmentAttributes {
-  id: string;
+  id: number;
   studioId: string;
-  eventId: string;
+  eventId: number;
   userId: string; // users.id
   roleOnShoot: TeamRole;
   createdAt?: Date;
@@ -35,9 +35,9 @@ export interface TeamAssignmentCreationAttributes
 })
 export class TeamAssignment extends Model<TeamAssignmentAttributes, TeamAssignmentCreationAttributes> implements TeamAssignmentAttributes {
   @PrimaryKey
-  @Default(DataType.UUIDV4)
-  @Column(DataType.UUID)
-  declare id: string;
+  @AutoIncrement
+  @Column(DataType.INTEGER)
+  declare id: number;
 
   @ForeignKey(() => Studio)
   @AllowNull(false)
@@ -49,8 +49,8 @@ export class TeamAssignment extends Model<TeamAssignmentAttributes, TeamAssignme
 
   @ForeignKey(() => Event)
   @AllowNull(false)
-  @Column(DataType.UUID)
-  declare eventId: string;
+  @Column(DataType.INTEGER)
+  declare eventId: number;
 
   @BelongsTo(() => Event, { foreignKey: 'eventId', as: 'event' })
   declare event?: Event;

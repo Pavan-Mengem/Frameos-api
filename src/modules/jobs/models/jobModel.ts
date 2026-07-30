@@ -1,5 +1,5 @@
 import {
-  Table, Column, Model, PrimaryKey, Default, AllowNull,
+  Table, Column, Model, PrimaryKey, AutoIncrement, Default, AllowNull,
   DataType, CreatedAt, UpdatedAt,
 } from 'sequelize-typescript';
 import { Optional } from 'sequelize';
@@ -11,7 +11,7 @@ export const JOB_KINDS = ['thumbnail_generate', 'notification_send', 'invoice_pd
 export type JobKind = (typeof JOB_KINDS)[number];
 
 export interface JobAttributes {
-  id: string;
+  id: number;
   studioId: string;
   kind: JobKind;
   payload: object;
@@ -43,9 +43,9 @@ export interface JobCreationAttributes
 })
 export class Job extends Model<JobAttributes, JobCreationAttributes> implements JobAttributes {
   @PrimaryKey
-  @Default(DataType.UUIDV4)
-  @Column(DataType.UUID)
-  declare id: string;
+  @AutoIncrement
+  @Column(DataType.INTEGER)
+  declare id: number;
 
   @AllowNull(false)
   @Column(DataType.UUID)

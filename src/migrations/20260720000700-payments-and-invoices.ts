@@ -5,7 +5,7 @@ export const up: Migration = async ({ context: sequelize }) => {
   const qi = sequelize.getQueryInterface();
 
   await qi.createTable('payments', {
-    id: { type: DataTypes.UUID, defaultValue: DataTypes.UUIDV4, primaryKey: true },
+    id: { type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true },
     studio_id: {
       type: DataTypes.UUID,
       allowNull: false,
@@ -14,7 +14,7 @@ export const up: Migration = async ({ context: sequelize }) => {
       onDelete: 'CASCADE',
     },
     event_id: {
-      type: DataTypes.UUID,
+      type: DataTypes.INTEGER,
       allowNull: false,
       references: { model: 'events', key: 'id' },
       onUpdate: 'CASCADE',
@@ -37,7 +37,7 @@ export const up: Migration = async ({ context: sequelize }) => {
     },
     captured_at: { type: DataTypes.DATE, allowNull: true },
     notes: { type: DataTypes.TEXT, allowNull: true },
-    invoice_id: { type: DataTypes.UUID, allowNull: true },
+    invoice_id: { type: DataTypes.INTEGER, allowNull: true },
     created_at: { type: DataTypes.DATE, allowNull: false, defaultValue: DataTypes.NOW },
     updated_at: { type: DataTypes.DATE, allowNull: false, defaultValue: DataTypes.NOW },
     deleted_at: { type: DataTypes.DATE, allowNull: true },
@@ -49,7 +49,7 @@ export const up: Migration = async ({ context: sequelize }) => {
   await qi.addIndex('payments', ['gateway_payment_id'], { unique: true });
 
   await qi.createTable('invoices', {
-    id: { type: DataTypes.UUID, defaultValue: DataTypes.UUIDV4, primaryKey: true },
+    id: { type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true },
     studio_id: {
       type: DataTypes.UUID,
       allowNull: false,
@@ -58,14 +58,14 @@ export const up: Migration = async ({ context: sequelize }) => {
       onDelete: 'CASCADE',
     },
     event_id: {
-      type: DataTypes.UUID,
+      type: DataTypes.INTEGER,
       allowNull: false,
       references: { model: 'events', key: 'id' },
       onUpdate: 'CASCADE',
       onDelete: 'RESTRICT',
     },
     payment_id: {
-      type: DataTypes.UUID,
+      type: DataTypes.INTEGER,
       allowNull: false,
       references: { model: 'payments', key: 'id' },
       onUpdate: 'CASCADE',

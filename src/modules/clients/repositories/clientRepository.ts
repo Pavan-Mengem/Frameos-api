@@ -16,7 +16,7 @@ export class ClientRepository {
     return Client.create({ ...data, studioId } as ClientCreationAttributes, { transaction: tx });
   }
 
-  static findByIdScoped(studioId: string, id: string): Promise<Client | null> {
+  static findByIdScoped(studioId: string, id: number): Promise<Client | null> {
     return Client.findOne({ where: tenantScope(studioId, { id }) });
   }
 
@@ -33,12 +33,12 @@ export class ClientRepository {
     });
   }
 
-  static async updateScoped(studioId: string, id: string, patch: Partial<ClientAttributes>): Promise<Client | null> {
+  static async updateScoped(studioId: string, id: number, patch: Partial<ClientAttributes>): Promise<Client | null> {
     await Client.update(patch, { where: tenantScope(studioId, { id }) });
     return ClientRepository.findByIdScoped(studioId, id);
   }
 
-  static softDeleteScoped(studioId: string, id: string): Promise<number> {
+  static softDeleteScoped(studioId: string, id: number): Promise<number> {
     return Client.destroy({ where: tenantScope(studioId, { id }) });
   }
 }

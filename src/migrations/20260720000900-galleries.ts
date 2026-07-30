@@ -5,7 +5,7 @@ export const up: Migration = async ({ context: sequelize }) => {
   const qi = sequelize.getQueryInterface();
 
   await qi.createTable('galleries', {
-    id: { type: DataTypes.UUID, defaultValue: DataTypes.UUIDV4, primaryKey: true },
+    id: { type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true },
     studio_id: {
       type: DataTypes.UUID,
       allowNull: false,
@@ -14,7 +14,7 @@ export const up: Migration = async ({ context: sequelize }) => {
       onDelete: 'CASCADE',
     },
     event_id: {
-      type: DataTypes.UUID,
+      type: DataTypes.INTEGER,
       allowNull: true,
       references: { model: 'events', key: 'id' },
       onUpdate: 'CASCADE',
@@ -25,7 +25,7 @@ export const up: Migration = async ({ context: sequelize }) => {
     password_hash: { type: DataTypes.STRING, allowNull: true },
     expires_at: { type: DataTypes.DATE, allowNull: true },
     is_active: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: true },
-    cover_photo_id: { type: DataTypes.UUID, allowNull: true },
+    cover_photo_id: { type: DataTypes.INTEGER, allowNull: true },
     view_count: { type: DataTypes.INTEGER, allowNull: false, defaultValue: 0 },
     created_at: { type: DataTypes.DATE, allowNull: false, defaultValue: DataTypes.NOW },
     updated_at: { type: DataTypes.DATE, allowNull: false, defaultValue: DataTypes.NOW },
@@ -36,7 +36,7 @@ export const up: Migration = async ({ context: sequelize }) => {
   await qi.addIndex('galleries', ['slug'], { unique: true });
 
   await qi.createTable('albums', {
-    id: { type: DataTypes.UUID, defaultValue: DataTypes.UUIDV4, primaryKey: true },
+    id: { type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true },
     studio_id: {
       type: DataTypes.UUID,
       allowNull: false,
@@ -45,7 +45,7 @@ export const up: Migration = async ({ context: sequelize }) => {
       onDelete: 'CASCADE',
     },
     gallery_id: {
-      type: DataTypes.UUID,
+      type: DataTypes.INTEGER,
       allowNull: false,
       references: { model: 'galleries', key: 'id' },
       onUpdate: 'CASCADE',
@@ -60,7 +60,7 @@ export const up: Migration = async ({ context: sequelize }) => {
   await qi.addIndex('albums', ['gallery_id']);
 
   await qi.createTable('photos', {
-    id: { type: DataTypes.UUID, defaultValue: DataTypes.UUIDV4, primaryKey: true },
+    id: { type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true },
     studio_id: {
       type: DataTypes.UUID,
       allowNull: false,
@@ -69,14 +69,14 @@ export const up: Migration = async ({ context: sequelize }) => {
       onDelete: 'CASCADE',
     },
     gallery_id: {
-      type: DataTypes.UUID,
+      type: DataTypes.INTEGER,
       allowNull: false,
       references: { model: 'galleries', key: 'id' },
       onUpdate: 'CASCADE',
       onDelete: 'CASCADE',
     },
     album_id: {
-      type: DataTypes.UUID,
+      type: DataTypes.INTEGER,
       allowNull: true,
       references: { model: 'albums', key: 'id' },
       onUpdate: 'CASCADE',
@@ -101,7 +101,7 @@ export const up: Migration = async ({ context: sequelize }) => {
   await qi.addIndex('photos', ['s3_key'], { unique: true });
 
   await qi.createTable('favorites', {
-    id: { type: DataTypes.UUID, defaultValue: DataTypes.UUIDV4, primaryKey: true },
+    id: { type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true },
     studio_id: {
       type: DataTypes.UUID,
       allowNull: false,
@@ -110,14 +110,14 @@ export const up: Migration = async ({ context: sequelize }) => {
       onDelete: 'CASCADE',
     },
     gallery_id: {
-      type: DataTypes.UUID,
+      type: DataTypes.INTEGER,
       allowNull: false,
       references: { model: 'galleries', key: 'id' },
       onUpdate: 'CASCADE',
       onDelete: 'CASCADE',
     },
     photo_id: {
-      type: DataTypes.UUID,
+      type: DataTypes.INTEGER,
       allowNull: false,
       references: { model: 'photos', key: 'id' },
       onUpdate: 'CASCADE',

@@ -35,7 +35,7 @@ export class LeadService {
     }
   }
 
-  static async get(studioId: string, id: string): Promise<ApiResponse> {
+  static async get(studioId: string, id: number): Promise<ApiResponse> {
     try {
       const lead = await LeadRepository.findByIdScoped(studioId, id);
       if (!lead) return buildError('Lead not found', 404);
@@ -45,7 +45,7 @@ export class LeadService {
     }
   }
 
-  static async update(studioId: string, id: string, patch: UpdateLeadInput): Promise<ApiResponse> {
+  static async update(studioId: string, id: number, patch: UpdateLeadInput): Promise<ApiResponse> {
     try {
       const updated = await LeadRepository.updateScoped(studioId, id, patch);
       if (!updated) return buildError('Lead not found', 404);
@@ -55,7 +55,7 @@ export class LeadService {
     }
   }
 
-  static async setStatus(studioId: string, id: string, next: LeadStatus): Promise<ApiResponse> {
+  static async setStatus(studioId: string, id: number, next: LeadStatus): Promise<ApiResponse> {
     try {
       const lead = await LeadRepository.findByIdScoped(studioId, id);
       if (!lead) return buildError('Lead not found', 404);
@@ -82,7 +82,7 @@ export class LeadService {
     }
   }
 
-  static async remove(studioId: string, id: string): Promise<ApiResponse> {
+  static async remove(studioId: string, id: number): Promise<ApiResponse> {
     try {
       const affected = await LeadRepository.softDeleteScoped(studioId, id);
       if (!affected) return buildError('Lead not found', 404);

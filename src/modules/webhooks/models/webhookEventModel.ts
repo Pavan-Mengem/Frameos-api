@@ -1,11 +1,11 @@
 import {
-  Table, Column, Model, PrimaryKey, Default, AllowNull,
+  Table, Column, Model, PrimaryKey, AutoIncrement, Default, AllowNull,
   DataType, CreatedAt,
 } from 'sequelize-typescript';
 import { Optional } from 'sequelize';
 
 export interface WebhookEventAttributes {
-  id: string;
+  id: number;
   provider: string;    // 'razorpay' | ...
   eventId: string;     // provider's event id
   eventType: string;   // 'payment.captured', ...
@@ -32,9 +32,9 @@ export interface WebhookEventCreationAttributes
 })
 export class WebhookEvent extends Model<WebhookEventAttributes, WebhookEventCreationAttributes> implements WebhookEventAttributes {
   @PrimaryKey
-  @Default(DataType.UUIDV4)
-  @Column(DataType.UUID)
-  declare id: string;
+  @AutoIncrement
+  @Column(DataType.INTEGER)
+  declare id: number;
 
   @AllowNull(false)
   @Column(DataType.STRING)

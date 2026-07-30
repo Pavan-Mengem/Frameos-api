@@ -79,7 +79,7 @@ export class PaymentService {
    * receives an order id + publishable key and completes checkout in-browser.
    * The webhook is the sole source of truth for marking the payment paid.
    */
-  static async createOrder(studioId: string, dto: { eventId: string; kind: Exclude<PaymentKind, 'manual'>; amountInr: number }): Promise<ApiResponse> {
+  static async createOrder(studioId: string, dto: { eventId: number; kind: Exclude<PaymentKind, 'manual'>; amountInr: number }): Promise<ApiResponse> {
     try {
       const ev = await EventRepository.findByIdScoped(studioId, dto.eventId);
       if (!ev) return buildError('Event not found', 404);
@@ -89,11 +89,11 @@ export class PaymentService {
         if (dto.amountInr > balance) return buildError(`Amount exceeds outstanding balance ₹${balance}`, 400);
       }
 
-      const receipt = `${ev.id.slice(0, 8)}-${Date.now()}`;
+      const receipt = `${ev.id}-${Date.now()}`;
       const order = await createOrder({
         amountInr: dto.amountInr,
         receipt,
-        notes: { studioId, eventId: ev.id, kind: dto.kind },
+        notes: { studioId, eventId: String(ev.id), kind: dto.kind },
       });
 
       const payment = await PaymentRepository.create(studioId, {
@@ -124,7 +124,7 @@ export class PaymentService {
   }
 
   static async recordManual(studioId: string, dto: {
-    eventId: string;
+    eventId: number;
     amountInr: number;
     method: 'cash' | 'upi' | 'other';
     notes?: string;
@@ -170,7 +170,7 @@ export class PaymentService {
     }
   }
 
-  static async get(studioId: string, id: string): Promise<ApiResponse> {
+  static async get(studioId: string, id: number): Promise<ApiResponse> {
     try {
       const p = await PaymentRepository.findByIdScoped(studioId, id);
       if (!p) return buildError('Payment not found', 404);

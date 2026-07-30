@@ -1,12 +1,13 @@
 import { Type } from 'class-transformer';
 import {
-  IsArray, IsBoolean, IsDateString, IsIn, IsInt, IsOptional, IsPositive, IsString, IsUUID,
+  IsArray, IsBoolean, IsDateString, IsIn, IsInt, IsOptional, IsPositive, IsString,
   Max, MaxLength, Min, MinLength, ValidateNested,
 } from 'class-validator';
+import { IdParamDTO } from '../../../utils/paramDTOs';
 
 export class CreateGalleryDTO {
-  @IsOptional() @IsUUID()
-  eventId?: string;
+  @IsOptional() @IsInt() @IsPositive()
+  eventId?: number;
 
   @IsString() @MinLength(1) @MaxLength(200)
   title!: string;
@@ -31,8 +32,8 @@ export class UpdateGalleryDTO {
   @IsOptional() @IsBoolean()
   isActive?: boolean;
 
-  @IsOptional() @IsUUID()
-  coverPhotoId?: string | null;
+  @IsOptional() @IsInt() @IsPositive()
+  coverPhotoId?: number | null;
 }
 
 export class CreateAlbumDTO {
@@ -61,8 +62,8 @@ class PresignItemDTO {
   @IsInt() @IsPositive() @Max(25 * 1024 * 1024)
   byteSize!: number;
 
-  @IsOptional() @IsUUID()
-  albumId?: string;
+  @IsOptional() @IsInt() @IsPositive()
+  albumId?: number;
 }
 
 // one presign batch = up to 50 photos
@@ -72,8 +73,8 @@ export class PresignDTO {
 }
 
 export class ConfirmDTO {
-  @IsArray() @IsUUID('4', { each: true })
-  photoIds!: string[];
+  @IsArray() @IsInt({ each: true }) @IsPositive({ each: true })
+  photoIds!: number[];
 }
 
 // --- public ---
@@ -83,9 +84,22 @@ export class PasswordDTO {
 }
 
 export class FavoriteDTO {
-  @IsUUID()
-  photoId!: string;
+  @IsInt() @IsPositive()
+  photoId!: number;
 
   @IsString() @MinLength(8) @MaxLength(80)
   clientIdentifier!: string;
+}
+
+// --- route param DTOs ---
+export class GalleryAlbumParamsDTO extends IdParamDTO {
+  @Type(() => Number)
+  @IsInt() @IsPositive()
+  albumId!: number;
+}
+
+export class GalleryPhotoParamsDTO extends IdParamDTO {
+  @Type(() => Number)
+  @IsInt() @IsPositive()
+  photoId!: number;
 }

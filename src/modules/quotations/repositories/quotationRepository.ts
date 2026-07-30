@@ -13,7 +13,7 @@ export class QuotationRepository {
     return Quotation.create({ ...data, studioId } as unknown as QuotationCreationAttributes, { transaction: tx });
   }
 
-  static findByIdScoped(studioId: string, id: string): Promise<Quotation | null> {
+  static findByIdScoped(studioId: string, id: number): Promise<Quotation | null> {
     return Quotation.findOne({ where: tenantScope(studioId, { id }) });
   }
 
@@ -30,22 +30,22 @@ export class QuotationRepository {
     });
   }
 
-  static update(studioId: string, id: string, patch: UpdateQuotationInput, tx?: Transaction) {
+  static update(studioId: string, id: number, patch: UpdateQuotationInput, tx?: Transaction) {
     return Quotation.update(patch as unknown as QuotationCreationAttributes, { where: tenantScope(studioId, { id }), transaction: tx });
   }
 
-  static setShareSlug(studioId: string, id: string, slug: string, tx?: Transaction) {
+  static setShareSlug(studioId: string, id: number, slug: string, tx?: Transaction) {
     return Quotation.update(
       { shareSlug: slug, status: 'sent', sentAt: new Date() },
       { where: tenantScope(studioId, { id }), transaction: tx }
     );
   }
 
-  static setStatus(studioId: string, id: string, status: QuotationStatus, extra: Partial<Record<string, unknown>> = {}) {
+  static setStatus(studioId: string, id: number, status: QuotationStatus, extra: Partial<Record<string, unknown>> = {}) {
     return Quotation.update({ status, ...extra } as unknown as QuotationCreationAttributes, { where: tenantScope(studioId, { id }) });
   }
 
-  static softDeleteScoped(studioId: string, id: string): Promise<number> {
+  static softDeleteScoped(studioId: string, id: number): Promise<number> {
     return Quotation.destroy({ where: tenantScope(studioId, { id }) });
   }
 }

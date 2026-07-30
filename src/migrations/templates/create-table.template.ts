@@ -4,7 +4,9 @@ import type { Migration } from '../../db/migrator';
 export const up: Migration = async ({ context: sequelize }) => {
   const qi = sequelize.getQueryInterface();
   await qi.createTable('__TABLE_NAME__', {
-    id: { type: DataTypes.UUID, defaultValue: DataTypes.UUIDV4, primaryKey: true },
+    id: { type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true },
+    // studio_id (and any FK to studios/users) stays UUID — that's the one
+    // standing exception to the INTEGER-auto-increment convention above.
     studio_id: {
       type: DataTypes.UUID,
       allowNull: false,

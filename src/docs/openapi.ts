@@ -4,9 +4,16 @@
  * surface at a glance and so we have a single source-of-truth manifest
  * for the endpoints the isolation-check script iterates over.
  *
- * Not exhaustive on schemas — refer to the zod DTOs in each module for
- * canonical shapes. Everything under `/public/*` is unauthenticated;
- * everything else expects a Bearer JWT (see /auth/verify-otpless).
+ * This is the single source of truth for the API surface — served live at
+ * GET /api-docs.json and used to generate postman/FrameOS.postman_collection.json
+ * (see docs/API.md). When you add or change a route, update it here so the
+ * served spec and the Postman collection stay accurate.
+ *
+ * Not exhaustive on schemas — refer to the class-validator DTOs in each
+ * module's dto/ folder for canonical request shapes (env vars are the only
+ * place this codebase uses zod). Everything under `/public/*` is
+ * unauthenticated; everything else expects a Bearer JWT (see
+ * /auth/verify-otpless).
  */
 export const openApiDocument = {
   openapi: '3.0.3',

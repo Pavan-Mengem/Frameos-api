@@ -1,5 +1,5 @@
 import {
-  Table, Column, Model, PrimaryKey, Default, AllowNull, ForeignKey, BelongsTo, HasOne,
+  Table, Column, Model, PrimaryKey, AutoIncrement, Default, AllowNull, ForeignKey, BelongsTo, HasOne,
   DataType, CreatedAt, UpdatedAt, DeletedAt,
 } from 'sequelize-typescript';
 import { Optional } from 'sequelize';
@@ -15,9 +15,9 @@ export const LEAD_STATUSES = ['new', 'contacted', 'quoted', 'won', 'lost'] as co
 export type LeadStatus = (typeof LEAD_STATUSES)[number];
 
 export interface LeadAttributes {
-  id: string;
+  id: number;
   studioId: string;
-  clientId: string | null;
+  clientId: number | null;
   name: string;
   phone: string | null;
   email: string | null;
@@ -55,9 +55,9 @@ export interface LeadCreationAttributes
 })
 export class Lead extends Model<LeadAttributes, LeadCreationAttributes> implements LeadAttributes {
   @PrimaryKey
-  @Default(DataType.UUIDV4)
-  @Column(DataType.UUID)
-  declare id: string;
+  @AutoIncrement
+  @Column(DataType.INTEGER)
+  declare id: number;
 
   @ForeignKey(() => Studio)
   @AllowNull(false)
@@ -68,8 +68,8 @@ export class Lead extends Model<LeadAttributes, LeadCreationAttributes> implemen
   declare studio?: Studio;
 
   @ForeignKey(() => Client)
-  @Column(DataType.UUID)
-  declare clientId: string | null;
+  @Column(DataType.INTEGER)
+  declare clientId: number | null;
 
   @BelongsTo(() => Client, { foreignKey: 'clientId', as: 'client' })
   declare client?: Client;

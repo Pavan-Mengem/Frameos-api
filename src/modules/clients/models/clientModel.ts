@@ -1,5 +1,5 @@
 import {
-  Table, Column, Model, PrimaryKey, Default, AllowNull, ForeignKey, BelongsTo, HasMany,
+  Table, Column, Model, PrimaryKey, AutoIncrement, AllowNull, ForeignKey, BelongsTo, HasMany,
   DataType, CreatedAt, UpdatedAt, DeletedAt,
 } from 'sequelize-typescript';
 import { Optional } from 'sequelize';
@@ -9,7 +9,7 @@ import { Event } from '../../events/models/eventModel';
 import { Quotation } from '../../quotations/models/quotationModel';
 
 export interface ClientAttributes {
-  id: string;
+  id: number;
   studioId: string;
   name: string;
   phone: string | null;
@@ -40,9 +40,9 @@ export interface ClientCreationAttributes
 })
 export class Client extends Model<ClientAttributes, ClientCreationAttributes> implements ClientAttributes {
   @PrimaryKey
-  @Default(DataType.UUIDV4)
-  @Column(DataType.UUID)
-  declare id: string;
+  @AutoIncrement
+  @Column(DataType.INTEGER)
+  declare id: number;
 
   @ForeignKey(() => Studio)
   @AllowNull(false)
