@@ -6,7 +6,7 @@ import { validateDto } from '../../../middleware/validateDto';
 import { otpRateLimit } from '../../../middleware/rateLimit';
 import { sendResponse } from '../../../utils/response';
 import { getPagination } from '../../../utils/pagination';
-import { RegisterDTO, OtplessDTO, RefreshDTO } from '../dtos/authDTO';
+import { RegisterDTO, SendOtpDTO, VerifyOtpDTO, RefreshDTO } from '../dtos/authDTO';
 import { AddUserDTO, UpdateStatusDTO } from '../dtos/userDTO';
 import { Role } from '../models/userModel';
 
@@ -17,8 +17,12 @@ router.post('/auth/register', validateDto(RegisterDTO), async (req: Request, res
   sendResponse(res, await UserService.register(req.body));
 });
 
-router.post('/auth/verify-otpless', otpRateLimit, validateDto(OtplessDTO), async (req: Request, res: Response) => {
-  sendResponse(res, await UserService.loginWithOtpless(req.body.token));
+router.post('/auth/send-otp', otpRateLimit, validateDto(SendOtpDTO), async (req: Request, res: Response) => {
+  sendResponse(res, await UserService.sendOtp(req.body));
+});
+
+router.post('/auth/verify-otp', otpRateLimit, validateDto(VerifyOtpDTO), async (req: Request, res: Response) => {
+  sendResponse(res, await UserService.verifyOtp(req.body));
 });
 
 router.post('/auth/refresh', validateDto(RefreshDTO), async (req: Request, res: Response) => {

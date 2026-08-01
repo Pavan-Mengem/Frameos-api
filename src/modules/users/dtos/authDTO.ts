@@ -1,5 +1,4 @@
-import { IsEmail, IsIn, IsOptional, IsString, Length, Matches, MinLength } from 'class-validator';
-import { OTP_TYPES } from '../models/otpModel';
+import { IsEmail, IsOptional, IsString, Length, Matches, MinLength } from 'class-validator';
 
 export class RegisterDTO {
   @IsString() @MinLength(2)
@@ -24,12 +23,6 @@ export class RegisterDTO {
 export class SendOtpDTO {
   @IsString() @MinLength(3)
   identifier!: string;
-
-  @IsIn(OTP_TYPES)
-  type!: string;
-
-  @IsOptional() @IsString()
-  purpose?: string = 'login';
 }
 
 export class VerifyOtpDTO {
@@ -39,13 +32,8 @@ export class VerifyOtpDTO {
   @IsString() @Length(6, 6)
   otp!: string;
 
-  @IsOptional() @IsString()
-  purpose?: string = 'login';
-}
-
-export class OtplessDTO {
   @IsString() @MinLength(1)
-  token!: string;
+  requestId!: string;
 }
 
 export class RefreshDTO {

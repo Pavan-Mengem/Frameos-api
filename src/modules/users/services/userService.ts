@@ -8,9 +8,12 @@ import { UserRepository, CreateUserInput } from '../repositories/userRepository'
 import { User, Role } from '../models/userModel';
 import { signAccessToken, signRefreshToken, verifyRefreshToken, AuthClaims } from '../helpers/token.helper';
 import { hash, compare } from '../helpers/password.helper';
-import { verifyOtplessToken } from '../helpers/otpless.helper';
-import { RegisterDTO } from '../dtos/authDTO';
+import { initiateOtplessOtp, verifyOtplessOtp } from '../helpers/otpless.helper';
+import { RegisterDTO, SendOtpDTO, VerifyOtpDTO } from '../dtos/authDTO';
 import { AddUserDTO } from '../dtos/userDTO';
+
+const findUserByIdentifier = (identifier: string) =>
+  identifier.includes('@') ? UserRepository.findByEmail(identifier) : UserRepository.findByPhone(identifier);
 
 const sanitize = (u: User) => ({
   id: u.id,
@@ -57,16 +60,26 @@ export class UserService {
     }
   }
 
-  /** Primary login: exchange an OTPless token for FrameOS tokens. */
-  static async loginWithOtpless(token: string): Promise<ApiResponse> {
+  /** Sends a login OTP to a phone or email via OTPless. */
+  static async sendOtp(dto: SendOtpDTO): Promise<ApiResponse> {
     try {
-      const identity = await verifyOtplessToken(token);
-      const user =
-        (identity.phone && (await UserRepository.findByPhone(identity.phone))) ||
-        (identity.email && (await UserRepository.findByEmail(identity.email))) ||
-        null;
+      const { requestId } = await initiateOtplessOtp(dto.identifier);
+      return buildSuccess({ requestId });
+    } catch (error) {
+      return toErrorResponse(error, 'Failed to send OTP');
+    }
+  }
+
+  /** Verifies a login OTP via OTPless and exchanges it for FrameOS tokens. */
+  static async verifyOtp(dto: VerifyOtpDTO): Promise<ApiResponse> {
+    try {
+      const verified = await verifyOtplessOtp(dto.requestId, dto.otp);
+      if (!verified) return buildError('Invalid or expired code', 401);
+
+      const user = await findUserByIdentifier(dto.identifier);
       if (!user) return buildError('No FrameOS account for this identity', 401);
       if (!user.isActive) return buildError('Account is deactivated', 403);
+
       const tokens = await issueTokens(user);
       logger.info({ studioId: user.studioId, userId: user.id }, 'User signed in');
       return buildSuccess({ user: sanitize(user), ...tokens });
