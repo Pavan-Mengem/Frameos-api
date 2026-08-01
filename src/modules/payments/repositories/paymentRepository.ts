@@ -10,8 +10,8 @@ export class PaymentRepository {
     return Payment.create({ ...data, studioId } as unknown as PaymentCreationAttributes, { transaction: tx });
   }
 
-  static findByIdScoped(studioId: string, id: number): Promise<Payment | null> {
-    return Payment.findOne({ where: tenantScope(studioId, { id }) });
+  static findByIdScoped(studioId: string, id: number, tx?: Transaction): Promise<Payment | null> {
+    return Payment.findOne({ where: tenantScope(studioId, { id }), transaction: tx });
   }
 
   static findByGatewayOrderId(gatewayOrderId: string): Promise<Payment | null> {

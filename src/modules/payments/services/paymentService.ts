@@ -151,7 +151,7 @@ export class PaymentService {
         );
         await EventRepository.addPaid(studioId, ev.id, dto.amountInr, tx);
         await generateInvoice(studioId, payment, tx);
-        const refreshed = await PaymentRepository.findByIdScoped(studioId, payment.id);
+        const refreshed = await PaymentRepository.findByIdScoped(studioId, payment.id, tx);
         return sanitize(refreshed!);
       });
 
@@ -238,7 +238,7 @@ export class PaymentService {
 
         const captured = Math.round(rp.amount / 100); // paise → ₹
         await EventRepository.addPaid(payment.studioId, payment.eventId, captured, tx);
-        const refreshed = await PaymentRepository.findByIdScoped(payment.studioId, payment.id);
+        const refreshed = await PaymentRepository.findByIdScoped(payment.studioId, payment.id, tx);
         if (refreshed) await generateInvoice(payment.studioId, refreshed, tx);
       });
 
