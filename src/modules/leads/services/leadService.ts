@@ -2,6 +2,7 @@ import { ApiResponse, buildError, buildSuccess } from '../../../utils/response';
 import { toErrorResponse } from '../../../utils/errorHandler';
 import { buildListResponse } from '../../../utils/pagination';
 import { BuiltQuery } from '../../../utils/queryBuilder';
+import { logger } from '../../../config/logger';
 import { StudioRepository } from '../../studios';
 import { ClientService } from '../../clients';
 import { LeadRepository, CreateLeadInput, UpdateLeadInput } from '../repositories/leadRepository';
@@ -20,6 +21,7 @@ export class LeadService {
   static async create(studioId: string, dto: CreateLeadInput): Promise<ApiResponse> {
     try {
       const lead = await LeadRepository.create(studioId, dto);
+      logger.info({ studioId, leadId: lead.id }, 'Lead created');
       return buildSuccess(lead, undefined, 201);
     } catch (error) {
       return toErrorResponse(error, 'Failed to create lead');
@@ -49,6 +51,7 @@ export class LeadService {
     try {
       const updated = await LeadRepository.updateScoped(studioId, id, patch);
       if (!updated) return buildError('Lead not found', 404);
+      logger.info({ studioId, leadId: id }, 'Lead updated');
       return buildSuccess(updated);
     } catch (error) {
       return toErrorResponse(error, 'Failed to update lead');
@@ -76,6 +79,7 @@ export class LeadService {
         clientId = c.id;
       }
       const updated = await LeadRepository.updateScoped(studioId, id, { status: next, clientId });
+      logger.info({ studioId, leadId: id, from: lead.status, to: next }, 'Lead status changed');
       return buildSuccess(updated);
     } catch (error) {
       return toErrorResponse(error, 'Failed to update lead status');
@@ -86,6 +90,7 @@ export class LeadService {
     try {
       const affected = await LeadRepository.softDeleteScoped(studioId, id);
       if (!affected) return buildError('Lead not found', 404);
+      logger.info({ studioId, leadId: id }, 'Lead deleted');
       return buildSuccess(null, undefined, 204);
     } catch (error) {
       return toErrorResponse(error, 'Failed to delete lead');
@@ -114,6 +119,7 @@ export class LeadService {
         source: 'portfolio',
         status: 'new',
       });
+      logger.info({ studioId: studio.id, leadId: lead.id }, 'Portfolio enquiry captured');
       // Never leak internals to the unauthenticated caller.
       return buildSuccess({ id: lead.id }, undefined, 201);
     } catch (error) {

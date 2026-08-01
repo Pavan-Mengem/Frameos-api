@@ -105,6 +105,7 @@ export class PaymentService {
         status: 'created',
       } as CreatePaymentInput);
 
+      logger.info({ studioId, eventId: ev.id, paymentId: payment.id, kind: dto.kind, amountInr: dto.amountInr }, 'Payment order created');
       return buildSuccess(
         {
           payment: sanitize(payment),
@@ -155,6 +156,7 @@ export class PaymentService {
         return sanitize(refreshed!);
       });
 
+      logger.info({ studioId, eventId: ev.id, amountInr: dto.amountInr, method: dto.method }, 'Manual payment recorded');
       return buildSuccess(result, undefined, 201);
     } catch (error) {
       return toErrorResponse(error, 'Failed to record payment');
@@ -242,6 +244,7 @@ export class PaymentService {
         if (refreshed) await generateInvoice(payment.studioId, refreshed, tx);
       });
 
+      logger.info({ studioId: payment.studioId, paymentId: payment.id, orderId: rp.order_id }, 'Razorpay payment captured');
       return buildSuccess({ ok: true });
     } catch (error) {
       return toErrorResponse(error, 'Failed to process webhook');

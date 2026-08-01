@@ -1,6 +1,5 @@
 import { Sequelize } from 'sequelize-typescript';
 import { env } from './env';
-import { logger } from './logger';
 import { Client } from '../modules/clients/models/clientModel';
 import { Studio } from '../modules/studios/models/studioModel';
 import { WebhookEvent } from '../modules/webhooks/models/webhookEventModel';
@@ -27,7 +26,12 @@ export const sequelize = new Sequelize(env.DB_NAME, env.DB_USER, env.DB_PASSWORD
   host: env.DB_HOST,
   port: env.DB_PORT,
   dialect: 'postgres',
-  logging: env.isProd ? false : (msg) => logger.debug(msg),
+  dialectOptions: {
+    ssl: { require: true, rejectUnauthorized: false },
+  },
+  // Raw SQL logging is off — services log success/error at the business-logic
+  // level (see logger.info/logger.error calls in each service's methods) instead.
+  logging: false,
   pool: { max: 10, min: 0, acquire: 30000, idle: 10000 },
   define: {
     underscored: true, // studio_id, created_at in DB; camelCase in code

@@ -1,5 +1,6 @@
 import { ApiResponse, buildError, buildSuccess } from '../../../utils/response';
 import { toErrorResponse } from '../../../utils/errorHandler';
+import { logger } from '../../../config/logger';
 import { StudioRepository } from '../repositories/studioRepository';
 import { Studio } from '../models/studioModel';
 import { isThemeAllowedForPlan, THEMES } from '../helpers/themeRegistry';
@@ -101,6 +102,7 @@ export class StudioService {
         theme: dto.theme ?? s.theme,
         settings: nextSettings as Record<string, unknown>,
       });
+      logger.info({ studioId }, 'Studio profile updated');
       return StudioService.getMe(studioId);
     } catch (error) {
       return toErrorResponse(error, 'Failed to update studio');

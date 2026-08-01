@@ -92,6 +92,7 @@ export class GalleryService {
         passwordHash,
         expiresAt: dto.expiresAt ? new Date(dto.expiresAt) : null,
       } as CreateGalleryInput);
+      logger.info({ studioId, galleryId: g.id, slug: g.slug }, 'Gallery created');
       return buildSuccess(sanitizeGallery(g), undefined, 201);
     } catch (error) {
       return toErrorResponse(error, 'Failed to create gallery');
@@ -140,6 +141,7 @@ export class GalleryService {
       if (dto.isActive !== undefined) patch.isActive = dto.isActive;
       if (dto.coverPhotoId !== undefined) patch.coverPhotoId = dto.coverPhotoId;
       await GalleryRepository.update(studioId, id, patch);
+      logger.info({ studioId, galleryId: id }, 'Gallery updated');
       return GalleryService.get(studioId, id);
     } catch (error) {
       return toErrorResponse(error, 'Failed to update gallery');
@@ -150,6 +152,7 @@ export class GalleryService {
     try {
       const affected = await GalleryRepository.softDeleteScoped(studioId, id);
       if (!affected) return buildError('Gallery not found', 404);
+      logger.info({ studioId, galleryId: id }, 'Gallery deleted');
       return buildSuccess(null, undefined, 204);
     } catch (error) {
       return toErrorResponse(error, 'Failed to delete gallery');
@@ -162,6 +165,7 @@ export class GalleryService {
       const g = await GalleryRepository.findScoped(studioId, galleryId);
       if (!g) return buildError('Gallery not found', 404);
       const a = await AlbumRepository.create(studioId, galleryId, title, sortOrder);
+      logger.info({ studioId, galleryId, albumId: a.id }, 'Album added');
       return buildSuccess(sanitizeAlbum(a), undefined, 201);
     } catch (error) {
       return toErrorResponse(error, 'Failed to add album');
@@ -172,6 +176,7 @@ export class GalleryService {
     try {
       const [affected] = await AlbumRepository.update(studioId, id, patch);
       if (!affected) return buildError('Album not found', 404);
+      logger.info({ studioId, albumId: id }, 'Album updated');
       return buildSuccess({ id, ...patch });
     } catch (error) {
       return toErrorResponse(error, 'Failed to update album');
@@ -182,6 +187,7 @@ export class GalleryService {
     try {
       const affected = await AlbumRepository.deleteScoped(studioId, id);
       if (!affected) return buildError('Album not found', 404);
+      logger.info({ studioId, albumId: id }, 'Album deleted');
       return buildSuccess(null, undefined, 204);
     } catch (error) {
       return toErrorResponse(error, 'Failed to delete album');
@@ -231,6 +237,7 @@ export class GalleryService {
           };
         })
       );
+      logger.info({ studioId, galleryId, count: uploads.length }, 'Photo uploads presigned');
       return buildSuccess({ uploads });
     } catch (error) {
       return toErrorResponse(error, 'Failed to presign uploads');
@@ -247,6 +254,7 @@ export class GalleryService {
           JobRepository.enqueue(studioId, 'thumbnail_generate', { photoId, galleryId })
         )
       );
+      logger.info({ studioId, galleryId, confirmed: affected }, 'Photo uploads confirmed');
       return buildSuccess({ confirmed: affected });
     } catch (error) {
       return toErrorResponse(error, 'Failed to confirm uploads');
@@ -265,6 +273,7 @@ export class GalleryService {
         logger.warn({ photoId, err: err instanceof Error ? err.message : err }, 'S3 delete failed');
       }
       await PhotoRepository.softDeleteScoped(studioId, photoId);
+      logger.info({ studioId, photoId }, 'Photo deleted');
       return buildSuccess(null, undefined, 204);
     } catch (error) {
       return toErrorResponse(error, 'Failed to delete photo');

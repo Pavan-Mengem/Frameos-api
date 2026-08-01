@@ -2,6 +2,7 @@ import { sequelize } from '../../../config/database';
 import { ApiResponse, buildError, buildSuccess } from '../../../utils/response';
 import { toErrorResponse } from '../../../utils/errorHandler';
 import { buildListResponse, PageParams } from '../../../utils/pagination';
+import { logger } from '../../../config/logger';
 import { StudioRepository } from '../../studios';
 import { UserRepository, CreateUserInput } from '../repositories/userRepository';
 import { User, Role } from '../models/userModel';
@@ -49,6 +50,7 @@ export class UserService {
       });
 
       const tokens = await issueTokens(result.owner);
+      logger.info({ studioId: result.studio.id, userId: result.owner.id }, 'Studio registered');
       return buildSuccess({ user: sanitize(result.owner), studioId: result.studio.id, ...tokens }, undefined, 201);
     } catch (error) {
       return toErrorResponse(error, 'Failed to register studio');
@@ -66,6 +68,7 @@ export class UserService {
       if (!user) return buildError('No FrameOS account for this identity', 401);
       if (!user.isActive) return buildError('Account is deactivated', 403);
       const tokens = await issueTokens(user);
+      logger.info({ studioId: user.studioId, userId: user.id }, 'User signed in');
       return buildSuccess({ user: sanitize(user), ...tokens });
     } catch (error) {
       return toErrorResponse(error, 'Failed to sign in');
@@ -97,6 +100,7 @@ export class UserService {
   static async logout(userId: string): Promise<ApiResponse> {
     try {
       await UserRepository.setRefreshHash(userId, null);
+      logger.info({ userId }, 'User logged out');
       return buildSuccess({ loggedOut: true });
     } catch (error) {
       return toErrorResponse(error, 'Failed to log out');
@@ -124,6 +128,7 @@ export class UserService {
         phone: dto.phone,
         role: dto.role as Role,
       });
+      logger.info({ studioId, userId: user.id, role: user.role }, 'Team member added');
       return buildSuccess(sanitize(user), undefined, 201);
     } catch (error) {
       return toErrorResponse(error, 'Failed to add team member');
@@ -145,6 +150,7 @@ export class UserService {
       if (!member) return buildError('Team member not found', 404);
       if (member.role === 'owner') return buildError('Cannot deactivate the owner', 403);
       await UserRepository.setStatus(studioId, memberId, isActive);
+      logger.info({ studioId, memberId, isActive }, 'Team member status changed');
       return buildSuccess({ id: memberId, isActive });
     } catch (error) {
       return toErrorResponse(error, 'Failed to update team member status');

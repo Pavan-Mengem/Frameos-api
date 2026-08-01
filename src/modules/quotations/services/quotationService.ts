@@ -4,6 +4,7 @@ import { ApiResponse, buildError, buildSuccess } from '../../../utils/response';
 import { toErrorResponse } from '../../../utils/errorHandler';
 import { buildListResponse } from '../../../utils/pagination';
 import { BuiltQuery } from '../../../utils/queryBuilder';
+import { logger } from '../../../config/logger';
 import { StudioRepository } from '../../studios';
 import { ClientService } from '../../clients';
 import { CounterRepository, formatDocNumber, computeTotals, financialYearCode, GstLineInput } from '../../invoicing';
@@ -147,6 +148,7 @@ export class QuotationService {
       });
 
       const lines = await QuotationLineItemRepository.findLinesFor(q.id);
+      logger.info({ studioId, quotationId: q.id, quoteNumber: q.quoteNumber }, 'Quotation created');
       return buildSuccess(sanitize(q, lines), undefined, 201);
     } catch (error) {
       return toErrorResponse(error, 'Failed to create quotation');
@@ -244,6 +246,7 @@ export class QuotationService {
         });
       }
 
+      logger.info({ studioId, quotationId: id }, 'Quotation updated');
       return QuotationService.get(studioId, id);
     } catch (error) {
       return toErrorResponse(error, 'Failed to update quotation');
@@ -257,6 +260,7 @@ export class QuotationService {
       if (q.status !== 'draft') return buildError('Quotation is not in draft', 400);
       const slug = q.shareSlug ?? randomBytes(16).toString('hex');
       await QuotationRepository.setShareSlug(studioId, id, slug);
+      logger.info({ studioId, quotationId: id }, 'Quotation sent');
       return QuotationService.get(studioId, id);
     } catch (error) {
       return toErrorResponse(error, 'Failed to send quotation');
@@ -270,6 +274,7 @@ export class QuotationService {
       const extra: Record<string, unknown> = {};
       if (status === 'accepted') extra.acceptedAt = new Date();
       await QuotationRepository.setStatus(studioId, id, status, extra);
+      logger.info({ studioId, quotationId: id, from: q.status, to: status }, 'Quotation status changed');
       return QuotationService.get(studioId, id);
     } catch (error) {
       return toErrorResponse(error, 'Failed to update quotation status');
@@ -280,6 +285,7 @@ export class QuotationService {
     try {
       const affected = await QuotationRepository.softDeleteScoped(studioId, id);
       if (!affected) return buildError('Quotation not found', 404);
+      logger.info({ studioId, quotationId: id }, 'Quotation deleted');
       return buildSuccess(null, undefined, 204);
     } catch (error) {
       return toErrorResponse(error, 'Failed to delete quotation');

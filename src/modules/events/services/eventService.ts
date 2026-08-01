@@ -2,6 +2,7 @@ import { ApiResponse, buildError, buildSuccess } from '../../../utils/response';
 import { toErrorResponse } from '../../../utils/errorHandler';
 import { buildListResponse } from '../../../utils/pagination';
 import { BuiltQuery } from '../../../utils/queryBuilder';
+import { logger } from '../../../config/logger';
 import { ClientService } from '../../clients';
 import { EventRepository, CreateEventInput, UpdateEventInput } from '../repositories/eventRepository';
 import { TeamAssignmentRepository } from '../repositories/teamAssignmentRepository';
@@ -20,6 +21,7 @@ export class EventService {
       // Verify client belongs to this studio (structural — getScoped throws 404 otherwise)
       await ClientService.getScoped(studioId, dto.clientId);
       const ev = await EventRepository.create(studioId, dto);
+      logger.info({ studioId, eventId: ev.id, clientId: dto.clientId }, 'Event created');
       return buildSuccess(withBalance(ev), undefined, 201);
     } catch (error) {
       return toErrorResponse(error, 'Failed to create event');
@@ -50,6 +52,7 @@ export class EventService {
     try {
       const updated = await EventRepository.updateScoped(studioId, id, patch);
       if (!updated) return buildError('Event not found', 404);
+      logger.info({ studioId, eventId: id }, 'Event updated');
       return buildSuccess(withBalance(updated));
     } catch (error) {
       return toErrorResponse(error, 'Failed to update event');
@@ -60,6 +63,7 @@ export class EventService {
     try {
       const affected = await EventRepository.softDeleteScoped(studioId, id);
       if (!affected) return buildError('Event not found', 404);
+      logger.info({ studioId, eventId: id }, 'Event deleted');
       return buildSuccess(null, undefined, 204);
     } catch (error) {
       return toErrorResponse(error, 'Failed to delete event');
@@ -72,6 +76,7 @@ export class EventService {
       const ev = await EventRepository.findByIdScoped(studioId, eventId); // confirms tenant ownership
       if (!ev) return buildError('Event not found', 404);
       const assignment = await TeamAssignmentRepository.addTeamMember(studioId, eventId, userId, roleOnShoot);
+      logger.info({ studioId, eventId, userId, roleOnShoot }, 'Team member added to event');
       return buildSuccess(assignment, undefined, 201);
     } catch (error) {
       return toErrorResponse(error, 'Failed to add team member');
@@ -82,6 +87,7 @@ export class EventService {
     try {
       const affected = await TeamAssignmentRepository.removeAssignment(studioId, assignmentId);
       if (!affected) return buildError('Assignment not found', 404);
+      logger.info({ studioId, assignmentId }, 'Team member removed from event');
       return buildSuccess(null, undefined, 204);
     } catch (error) {
       return toErrorResponse(error, 'Failed to remove team member');
