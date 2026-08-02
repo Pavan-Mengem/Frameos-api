@@ -31,7 +31,10 @@ export const initiateOtplessOtp = async (identifier: string): Promise<{ requestI
     body: JSON.stringify(body),
   });
 
-  if (!res.ok) throw new Error('Failed to send OTP');
+  if (!res.ok) {
+    const errorBody = await res.text();
+    throw new Error(`Failed to send OTP: ${res.status} ${errorBody}`);
+  }
 
   const data = (await res.json()) as OtplessInitiateResponse;
   return { requestId: data.requestId };
