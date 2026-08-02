@@ -5,7 +5,15 @@ import { StudioRepository } from '../repositories/studioRepository';
 import { Studio } from '../models/studioModel';
 import { isThemeAllowedForPlan, THEMES } from '../helpers/themeRegistry';
 import { GalleryRepository, PhotoRepository } from '../../galleries';
-import { readUrl } from '../../galleries/helpers/s3.helper';
+import { readUrl, presignPut } from '../../galleries/helpers/s3.helper';
+import { MAX_IMAGE_BYTES, ALLOWED_IMAGE_MIME } from '../../../utils/imageUpload';
+
+const MIME_EXT: Record<string, string> = {
+  'image/jpeg': 'jpg',
+  'image/png': 'png',
+  'image/webp': 'webp',
+  'image/heic': 'heic',
+};
 
 /**
  * StudioPublicData — what every portfolio theme renders against. Extended over
@@ -33,10 +41,42 @@ export interface StudioPublicData {
   packages: Array<{ title: string; priceInr: number; features: string[] }>;
   testimonials: Array<{ author: string; quote: string; rating?: number }>;
   featuredPhotos: Array<{ url: string; alt?: string }>;
+  logoUrl: string | null;
+  heroImageUrl: string | null;
+  heroVideoUrl: string | null;
+  stats: {
+    yearsExperience: number | null;
+    weddingsCount: number | null;
+    happyClientsCount: number | null;
+    googleRating: number | null;
+  };
 }
 
-const readSettings = (s: Studio): Partial<StudioPublicData> => {
-  const r = s.settings as Partial<StudioPublicData> | undefined;
+/** Shape actually persisted in `Studio.settings` — diverges from `StudioPublicData`
+ *  where the public payload resolves S3 keys to URLs (logoKey -> logoUrl, etc). */
+interface StoredSettings {
+  tagline?: string | null;
+  about?: string | null;
+  address?: string | null;
+  whatsapp?: string | null;
+  waLink?: string | null;
+  priceInr?: number | null;
+  socials?: StudioPublicData['socials'];
+  packages?: StudioPublicData['packages'];
+  testimonials?: StudioPublicData['testimonials'];
+  logoKey?: string | null;
+  heroImageKey?: string | null;
+  heroVideoUrl?: string | null;
+  stats?: {
+    yearsExperience?: number | null;
+    weddingsCount?: number | null;
+    happyClientsCount?: number | null;
+    googleRating?: number | null;
+  };
+}
+
+const readSettings = (s: Studio): Partial<StoredSettings> => {
+  const r = s.settings as Partial<StoredSettings> | undefined;
   return r ?? {};
 };
 
@@ -49,7 +89,7 @@ const composeWaLink = (whatsapp: string | null, waLink: string | null): string |
   return `https://wa.me/${digits}`;
 };
 
-const sanitize = (s: Studio) => ({
+const sanitize = (s: Studio, previewUrls: { logoUrl: string | null; heroImageUrl: string | null }) => ({
   id: s.id,
   name: s.name,
   slug: s.slug,
@@ -58,7 +98,7 @@ const sanitize = (s: Studio) => ({
   plan: s.plan,
   gstin: s.gstin,
   theme: s.theme,
-  settings: readSettings(s),
+  settings: { ...readSettings(s), ...previewUrls },
   createdAt: s.createdAt,
   updatedAt: s.updatedAt,
 });
@@ -69,7 +109,7 @@ export interface UpdateStudioInput {
   phone?: string | null;
   gstin?: string | null;
   theme?: string;
-  settings?: Partial<StudioPublicData>;
+  settings?: Partial<StoredSettings>;
 }
 
 export class StudioService {
@@ -77,9 +117,34 @@ export class StudioService {
     try {
       const s = await StudioRepository.findById(studioId);
       if (!s) return buildError('Studio not found', 404);
-      return buildSuccess(sanitize(s));
+      const ext = readSettings(s);
+      const [logoUrl, heroImageUrl] = await Promise.all([
+        ext.logoKey ? readUrl(ext.logoKey) : Promise.resolve<string | null>(null),
+        ext.heroImageKey ? readUrl(ext.heroImageKey) : Promise.resolve<string | null>(null),
+      ]);
+      return buildSuccess(sanitize(s, { logoUrl, heroImageUrl }));
     } catch (error) {
       return toErrorResponse(error, 'Failed to retrieve studio');
+    }
+  }
+
+  /** POST /studios/me/branding/presign — presign a single logo/hero-image upload. */
+  static async presignBranding(
+    studioId: string,
+    kind: 'logo' | 'heroImage',
+    mimeType: string,
+    byteSize: number
+  ): Promise<ApiResponse> {
+    try {
+      if (!ALLOWED_IMAGE_MIME.has(mimeType)) return buildError(`Unsupported mime ${mimeType}`, 400);
+      if (byteSize > MAX_IMAGE_BYTES) return buildError(`File exceeds ${MAX_IMAGE_BYTES} bytes`, 400);
+
+      const ext = MIME_EXT[mimeType] ?? 'jpg';
+      const key = `studios/${studioId}/branding/${kind}-${Date.now()}.${ext}`;
+      const uploadUrl = await presignPut(key, mimeType, byteSize);
+      return buildSuccess({ uploadUrl, key });
+    } catch (error) {
+      return toErrorResponse(error, 'Failed to presign branding upload');
     }
   }
 
@@ -143,6 +208,10 @@ export class StudioService {
       }
 
       const whatsapp = ext.whatsapp ?? s.phone;
+      const [logoUrl, heroImageUrl] = await Promise.all([
+        ext.logoKey ? readUrl(ext.logoKey) : Promise.resolve<string | null>(null),
+        ext.heroImageKey ? readUrl(ext.heroImageKey) : Promise.resolve<string | null>(null),
+      ]);
       const payload: StudioPublicData = {
         name: s.name,
         slug: s.slug,
@@ -159,6 +228,15 @@ export class StudioService {
         packages: ext.packages ?? [],
         testimonials: ext.testimonials ?? [],
         featuredPhotos: featured,
+        logoUrl,
+        heroImageUrl,
+        heroVideoUrl: ext.heroVideoUrl ?? null,
+        stats: {
+          yearsExperience: ext.stats?.yearsExperience ?? null,
+          weddingsCount: ext.stats?.weddingsCount ?? null,
+          happyClientsCount: ext.stats?.happyClientsCount ?? null,
+          googleRating: ext.stats?.googleRating ?? null,
+        },
       };
       return buildSuccess(payload);
     } catch (error) {

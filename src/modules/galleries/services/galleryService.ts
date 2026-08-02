@@ -15,9 +15,7 @@ import { signGalleryAccess, verifyGalleryAccess } from '../helpers/gallery-acces
 import { Gallery } from '../models/galleryModel';
 import { Photo, PhotoCreationAttributes } from '../models/photoModel';
 import { Album } from '../models/albumModel';
-
-const MAX_UPLOAD_BYTES = 25 * 1024 * 1024; // 25 MB per photo
-const ALLOWED_MIME = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/heic']);
+import { MAX_IMAGE_BYTES as MAX_UPLOAD_BYTES, ALLOWED_IMAGE_MIME as ALLOWED_MIME } from '../../../utils/imageUpload';
 
 const slugify = (title: string): string =>
   title

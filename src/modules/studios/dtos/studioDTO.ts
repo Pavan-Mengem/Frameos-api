@@ -1,9 +1,10 @@
 import { Type } from 'class-transformer';
 import {
-  IsArray, IsEmail, IsIn, IsInt, IsOptional, IsString, IsUrl, Max, MaxLength, Min, MinLength,
+  IsArray, IsEmail, IsIn, IsInt, IsNumber, IsOptional, IsPositive, IsString, IsUrl, Max, MaxLength, Min, MinLength,
   ValidateNested,
 } from 'class-validator';
 import { THEME_KEYS } from '../helpers/themeRegistry';
+import { MAX_IMAGE_BYTES } from '../../../utils/imageUpload';
 
 class SocialsDTO {
   @IsOptional() @IsUrl() @MaxLength(300) instagram?: string;
@@ -34,6 +35,13 @@ class TestimonialDTO {
   rating?: number;
 }
 
+class StatsDTO {
+  @IsOptional() @IsInt() @Min(0) @Max(100) yearsExperience?: number;
+  @IsOptional() @IsInt() @Min(0) weddingsCount?: number;
+  @IsOptional() @IsInt() @Min(0) happyClientsCount?: number;
+  @IsOptional() @IsNumber() @Min(0) @Max(5) googleRating?: number;
+}
+
 class SettingsDTO {
   @IsOptional() @IsString() @MaxLength(200) tagline?: string | null;
   @IsOptional() @IsString() @MaxLength(4000) about?: string | null;
@@ -41,6 +49,9 @@ class SettingsDTO {
   @IsOptional() @IsString() @MinLength(8) @MaxLength(20) whatsapp?: string | null;
   @IsOptional() @IsUrl() @MaxLength(300) waLink?: string | null;
   @IsOptional() @IsInt() @Min(0) priceInr?: number | null;
+  @IsOptional() @IsString() @MaxLength(300) logoKey?: string | null;
+  @IsOptional() @IsString() @MaxLength(300) heroImageKey?: string | null;
+  @IsOptional() @IsUrl() @MaxLength(500) heroVideoUrl?: string | null;
 
   @IsOptional() @ValidateNested() @Type(() => SocialsDTO)
   socials?: SocialsDTO;
@@ -50,6 +61,20 @@ class SettingsDTO {
 
   @IsOptional() @IsArray() @ValidateNested({ each: true }) @Type(() => TestimonialDTO)
   testimonials?: TestimonialDTO[];
+
+  @IsOptional() @ValidateNested() @Type(() => StatsDTO)
+  stats?: StatsDTO;
+}
+
+export class BrandingPresignDTO {
+  @IsIn(['logo', 'heroImage'])
+  kind!: 'logo' | 'heroImage';
+
+  @IsString() @MinLength(3) @MaxLength(80)
+  mimeType!: string;
+
+  @IsInt() @IsPositive() @Max(MAX_IMAGE_BYTES)
+  byteSize!: number;
 }
 
 export class UpdateStudioDTO {

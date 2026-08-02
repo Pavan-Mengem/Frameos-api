@@ -4,7 +4,7 @@ import { authenticate } from '../../../middleware/authenticate';
 import { authorize } from '../../../middleware/authorize';
 import { validateDto } from '../../../middleware/validateDto';
 import { sendResponse } from '../../../utils/response';
-import { UpdateStudioDTO } from '../dtos/studioDTO';
+import { UpdateStudioDTO, BrandingPresignDTO } from '../dtos/studioDTO';
 
 const router = Router();
 
@@ -39,5 +39,15 @@ router.patch(
 router.get('/themes', authenticate, async (_req: Request, res: Response) => {
   sendResponse(res, StudioService.listThemes());
 });
+
+router.post(
+  '/studios/me/branding/presign',
+  authenticate,
+  authorize('owner', 'admin'),
+  validateDto(BrandingPresignDTO),
+  async (req: Request, res: Response) => {
+    sendResponse(res, await StudioService.presignBranding(req.user.studioId, req.body.kind, req.body.mimeType, req.body.byteSize));
+  }
+);
 
 export default router;
