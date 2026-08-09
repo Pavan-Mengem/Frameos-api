@@ -1,14 +1,17 @@
 import { sequelize } from '../../../config/database';
+import { env } from '../../../config/env';
 import { ApiResponse, buildError, buildSuccess } from '../../../utils/response';
 import { toErrorResponse } from '../../../utils/errorHandler';
 import { buildListResponse, PageParams } from '../../../utils/pagination';
 import { logger } from '../../../config/logger';
 import { StudioRepository } from '../../studios';
 import { UserRepository, CreateUserInput } from '../repositories/userRepository';
+import { OtpRepository } from '../repositories/otpRepository';
 import { User, Role } from '../models/userModel';
 import { signAccessToken, signRefreshToken, verifyRefreshToken, AuthClaims } from '../helpers/token.helper';
 import { hash, compare } from '../helpers/password.helper';
 import { initiateOtplessOtp, verifyOtplessOtp } from '../helpers/otpless.helper';
+import { generateOtp, hashOtp, verifyOtp as verifyOtpHash, otpExpiry } from '../helpers/otp.helper';
 import { RegisterDTO, SendOtpDTO, VerifyOtpDTO } from '../dtos/authDTO';
 import { AddUserDTO } from '../dtos/userDTO';
 
@@ -60,9 +63,21 @@ export class UserService {
     }
   }
 
-  /** Sends a login OTP to a phone or email via OTPless. */
+  /** Sends a login OTP to a phone or email. In dev, the OTP is generated locally and returned in the response instead of going through OTPless. */
   static async sendOtp(dto: SendOtpDTO): Promise<ApiResponse> {
     try {
+      if (env.isDev) {
+        const otp = generateOtp();
+        const record = await OtpRepository.create({
+          identifier: dto.identifier,
+          otpHash: await hashOtp(otp),
+          type: dto.identifier.includes('@') ? 'email' : 'sms',
+          purpose: 'login',
+          expiresAt: otpExpiry(5),
+        });
+        return buildSuccess({ requestId: String(record.id), otp });
+      }
+
       const { requestId } = await initiateOtplessOtp(dto.identifier);
       return buildSuccess({ requestId });
     } catch (error) {
@@ -70,11 +85,23 @@ export class UserService {
     }
   }
 
-  /** Verifies a login OTP via OTPless and exchanges it for FrameOS tokens. */
+  /** Verifies a login OTP (locally in dev, via OTPless otherwise) and exchanges it for FrameOS tokens. */
   static async verifyOtp(dto: VerifyOtpDTO): Promise<ApiResponse> {
     try {
-      const verified = await verifyOtplessOtp(dto.requestId, dto.otp);
-      if (!verified) return buildError('Invalid or expired code', 401);
+      if (env.isDev) {
+        const record = await OtpRepository.findById(Number(dto.requestId));
+        if (!record || record.expiresAt.getTime() < Date.now()) return buildError('Invalid or expired code', 401);
+
+        const valid = await verifyOtpHash(dto.otp, record.otpHash);
+        if (!valid) {
+          await OtpRepository.incrementAttempts(record.id);
+          return buildError('Invalid or expired code', 401);
+        }
+        await OtpRepository.destroy(record.id);
+      } else {
+        const verified = await verifyOtplessOtp(dto.requestId, dto.otp);
+        if (!verified) return buildError('Invalid or expired code', 401);
+      }
 
       const user = await findUserByIdentifier(dto.identifier);
       if (!user) return buildError('No FrameOS account for this identity', 401);

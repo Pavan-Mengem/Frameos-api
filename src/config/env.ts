@@ -57,5 +57,6 @@ export const env = {
   ...parsed.data,
   isProd: parsed.data.NODE_ENV === 'production',
   isTest: parsed.data.NODE_ENV === 'test',
+  isDev: parsed.data.NODE_ENV === 'development',
   allowedOrigins: parsed.data.ALLOWED_ORIGINS.split(',').map((s) => s.trim()),
 };
