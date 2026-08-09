@@ -4,6 +4,7 @@ import {
   ValidateNested,
 } from 'class-validator';
 import { THEME_KEYS } from '../helpers/themeRegistry';
+import { ACCENT_KEYS, HEADING_FONT_KEYS } from '../helpers/themeConfigRegistry';
 import { MAX_IMAGE_BYTES } from '../../../utils/imageUpload';
 
 class SocialsDTO {
@@ -75,6 +76,32 @@ export class BrandingPresignDTO {
 
   @IsInt() @IsPositive() @Max(MAX_IMAGE_BYTES)
   byteSize!: number;
+}
+
+class SectionsVisibilityDTO {
+  @IsOptional() @IsIn([true, false]) hideStats?: boolean;
+  @IsOptional() @IsIn([true, false]) hideAbout?: boolean;
+  @IsOptional() @IsIn([true, false]) hidePackages?: boolean;
+  @IsOptional() @IsIn([true, false]) hideTestimonials?: boolean;
+}
+
+export class PortfolioThemeConfigDTO {
+  @IsOptional() @IsIn(ACCENT_KEYS)
+  accent?: string;
+
+  @IsOptional() @IsIn(HEADING_FONT_KEYS)
+  headingFont?: string;
+
+  @IsOptional() @ValidateNested() @Type(() => SectionsVisibilityDTO)
+  sections?: SectionsVisibilityDTO;
+}
+
+export class UpdateThemeDraftDTO {
+  @IsOptional() @IsIn(THEME_KEYS)
+  theme?: string;
+
+  @IsOptional() @ValidateNested() @Type(() => PortfolioThemeConfigDTO)
+  themeConfig?: PortfolioThemeConfigDTO;
 }
 
 export class UpdateStudioDTO {

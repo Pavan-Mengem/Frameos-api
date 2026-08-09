@@ -24,6 +24,10 @@ export interface StudioAttributes {
   plan: Plan;
   gstin: string | null; // India: GST identification number
   theme: string;        // active portfolio theme key
+  themeConfig: Record<string, unknown>;    // published theme customization (accent/font/section toggles)
+  draftTheme: string | null;               // pending draft's theme key override; null = no draft
+  draftThemeConfig: Record<string, unknown> | null; // pending draft's config override; null = no draft
+  draftUpdatedAt: Date | null;
   settings: Record<string, unknown>;
   createdAt?: Date;
   updatedAt?: Date;
@@ -31,7 +35,11 @@ export interface StudioAttributes {
 }
 
 export interface StudioCreationAttributes
-  extends Optional<StudioAttributes, 'id' | 'email' | 'phone' | 'plan' | 'gstin' | 'theme' | 'settings' | 'createdAt' | 'updatedAt' | 'deletedAt'> {}
+  extends Optional<
+    StudioAttributes,
+    | 'id' | 'email' | 'phone' | 'plan' | 'gstin' | 'theme' | 'themeConfig' | 'draftTheme'
+    | 'draftThemeConfig' | 'draftUpdatedAt' | 'settings' | 'createdAt' | 'updatedAt' | 'deletedAt'
+  > {}
 
 /** Studios are the tenant root — every other tenant-owned table hangs off studioId. */
 @Table({ tableName: 'studios', timestamps: true, paranoid: true })
@@ -68,6 +76,20 @@ export class Studio extends Model<StudioAttributes, StudioCreationAttributes> im
   @Default('minimal-editorial')
   @Column(DataType.STRING)
   declare theme: string;
+
+  @AllowNull(false)
+  @Default({})
+  @Column(DataType.JSONB)
+  declare themeConfig: Record<string, unknown>;
+
+  @Column(DataType.STRING)
+  declare draftTheme: string | null;
+
+  @Column(DataType.JSONB)
+  declare draftThemeConfig: Record<string, unknown> | null;
+
+  @Column(DataType.DATE)
+  declare draftUpdatedAt: Date | null;
 
   @AllowNull(false)
   @Default({})

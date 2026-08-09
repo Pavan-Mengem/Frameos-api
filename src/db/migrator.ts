@@ -4,8 +4,8 @@ import path from 'path';
 import { sequelize } from '../config/database';
 import { logger } from '../config/logger';
 
-// Migrations are the source of truth for schema in every non-dev environment.
-// Dev keeps sequelize.sync({ alter: true }) for iteration; prod runs `npm run migrate`.
+// Migrations are the source of truth for schema in every environment, including
+// dev — `npm run dev` runs this `up` first. DB_AUTO_SYNC is an opt-in exception.
 export const migrator = new Umzug({
   migrations: {
     glob: ['../migrations/*.{ts,js}', { cwd: __dirname }],

@@ -24,6 +24,10 @@ export class ClientRepository {
     return Client.findOne({ where: tenantScope(studioId, { phone }) });
   }
 
+  static findByEmailScoped(studioId: string, email: string): Promise<Client | null> {
+    return Client.findOne({ where: tenantScope(studioId, { email }) });
+  }
+
   static findAndCountAllScoped(studioId: string, query: BuiltQuery): Promise<{ rows: Client[]; count: number }> {
     return Client.findAndCountAll({
       where: tenantScope(studioId, query.where),

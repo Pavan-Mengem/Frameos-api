@@ -11,8 +11,9 @@ const start = async () => {
   await sequelize.authenticate();
   logger.info('Database connection established');
 
-  // Dev convenience: sequelize.sync mirrors model changes into the DB.
-  // In prod, migrations (npm run migrate) are the sole source of truth.
+  // Migrations (npm run migrate, run automatically by `npm run dev`) are the
+  // sole source of truth. DB_AUTO_SYNC is an opt-in escape hatch for rapid
+  // local iteration only — leave it false to avoid schema drift from `schema_migrations`.
   if (!env.isProd && env.DB_AUTO_SYNC === 'true') {
     await sequelize.sync({ alter: true });
     logger.info('Models synced (dev)');

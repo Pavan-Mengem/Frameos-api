@@ -3,5 +3,8 @@ export * from './models/otpModel';
 export * from './dtos/authDTO';
 export * from './dtos/userDTO';
 export * from './repositories/userRepository';
+export * from './repositories/otpRepository';
+export * from './helpers/otp.helper';
+export * from './helpers/otpless.helper';
 export * from './services/userService';
 export { default as usersRouter } from './routes';

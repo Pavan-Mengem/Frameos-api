@@ -40,6 +40,10 @@ const schema = z.object({
   GALLERY_ACCESS_SECRET: z.string().default('dev-gallery-access-secret'),
   GALLERY_ACCESS_TTL: z.string().default('24h'),
 
+  // --- Client portal access tokens (OTP-gated, per client+studio) ---
+  CLIENT_PORTAL_ACCESS_SECRET: z.string().default('dev-client-portal-access-secret'),
+  CLIENT_PORTAL_ACCESS_TTL: z.string().default('24h'),
+
   // --- Razorpay ---
   RAZORPAY_KEY_ID: z.string().default(''),
   RAZORPAY_KEY_SECRET: z.string().default(''),

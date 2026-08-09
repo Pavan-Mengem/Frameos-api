@@ -1,5 +1,6 @@
 import { Transaction } from 'sequelize';
 import { Gallery, GalleryAttributes, GalleryCreationAttributes } from '../models/galleryModel';
+import { Event } from '../../events/models/eventModel';
 import { tenantScope } from '../../../utils/tenantScope';
 import { BuiltQuery } from '../../../utils/queryBuilder';
 
@@ -41,5 +42,16 @@ export class GalleryRepository {
 
   static countForStudio(studioId: string): Promise<number> {
     return Gallery.count({ where: tenantScope(studioId) });
+  }
+
+  /** Galleries attached to one client's events - used by the client portal
+   *  aggregation. Galleries with no eventId can't be attributed to a client
+   *  and are excluded (`required: true` on the join). */
+  static findAllForClient(studioId: string, clientId: number): Promise<Gallery[]> {
+    return Gallery.findAll({
+      where: tenantScope(studioId, { isActive: true }),
+      include: [{ model: Event, as: 'event', where: { clientId }, attributes: [], required: true }],
+      order: [['created_at', 'DESC']],
+    });
   }
 }

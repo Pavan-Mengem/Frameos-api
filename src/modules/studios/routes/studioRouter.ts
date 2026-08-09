@@ -4,7 +4,7 @@ import { authenticate } from '../../../middleware/authenticate';
 import { authorize } from '../../../middleware/authorize';
 import { validateDto } from '../../../middleware/validateDto';
 import { sendResponse } from '../../../utils/response';
-import { UpdateStudioDTO, BrandingPresignDTO } from '../dtos/studioDTO';
+import { UpdateStudioDTO, BrandingPresignDTO, UpdateThemeDraftDTO } from '../dtos/studioDTO';
 
 const router = Router();
 
@@ -39,6 +39,38 @@ router.patch(
 router.get('/themes', authenticate, async (_req: Request, res: Response) => {
   sendResponse(res, StudioService.listThemes());
 });
+
+router.get('/studios/me/theme-draft', authenticate, authorize('owner', 'admin'), async (req: Request, res: Response) => {
+  sendResponse(res, await StudioService.getThemeDraft(req.user.studioId));
+});
+
+router.patch(
+  '/studios/me/theme-draft',
+  authenticate,
+  authorize('owner', 'admin'),
+  validateDto(UpdateThemeDraftDTO),
+  async (req: Request, res: Response) => {
+    sendResponse(res, await StudioService.updateThemeDraft(req.user.studioId, req.body));
+  }
+);
+
+router.post(
+  '/studios/me/theme-draft/publish',
+  authenticate,
+  authorize('owner', 'admin'),
+  async (req: Request, res: Response) => {
+    sendResponse(res, await StudioService.publishThemeDraft(req.user.studioId));
+  }
+);
+
+router.delete(
+  '/studios/me/theme-draft',
+  authenticate,
+  authorize('owner', 'admin'),
+  async (req: Request, res: Response) => {
+    sendResponse(res, await StudioService.discardThemeDraft(req.user.studioId));
+  }
+);
 
 router.post(
   '/studios/me/branding/presign',

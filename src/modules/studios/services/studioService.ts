@@ -8,6 +8,17 @@ import { GalleryRepository, PhotoRepository } from '../../galleries';
 import { readUrl, presignPut } from '../../galleries/helpers/s3.helper';
 import { MAX_IMAGE_BYTES, ALLOWED_IMAGE_MIME } from '../../../utils/imageUpload';
 
+export interface PortfolioThemeConfig {
+  accent?: string;
+  headingFont?: string;
+  sections?: {
+    hideStats?: boolean;
+    hideAbout?: boolean;
+    hidePackages?: boolean;
+    hideTestimonials?: boolean;
+  };
+}
+
 const MIME_EXT: Record<string, string> = {
   'image/jpeg': 'jpg',
   'image/png': 'png',
@@ -24,6 +35,7 @@ export interface StudioPublicData {
   name: string;
   slug: string;
   theme: string;
+  themeConfig: PortfolioThemeConfig;
   tagline: string | null;
   about: string | null;
   address: string | null;
@@ -80,6 +92,11 @@ const readSettings = (s: Studio): Partial<StoredSettings> => {
   return r ?? {};
 };
 
+const readThemeConfig = (s: Studio): PortfolioThemeConfig => (s.themeConfig as PortfolioThemeConfig | undefined) ?? {};
+
+const readDraftThemeConfig = (s: Studio): PortfolioThemeConfig | null =>
+  (s.draftThemeConfig as PortfolioThemeConfig | null | undefined) ?? null;
+
 /** Compose `wa.me` link when only the number is set — one less thing to configure. */
 const composeWaLink = (whatsapp: string | null, waLink: string | null): string | null => {
   if (waLink) return waLink;
@@ -111,6 +128,82 @@ export interface UpdateStudioInput {
   theme?: string;
   settings?: Partial<StoredSettings>;
 }
+
+export interface UpdateThemeDraftInput {
+  theme?: string;
+  themeConfig?: PortfolioThemeConfig;
+}
+
+export interface ThemeDraftPayload extends StudioPublicData {
+  isDraftDirty: boolean;
+  draftUpdatedAt: string | null;
+}
+
+/**
+ * Shared payload assembly for both the public portfolio endpoint and the
+ * authenticated draft-preview endpoint, so the two never render differently.
+ * `themeKey`/`themeConfig` are passed in rather than read off `s` directly so
+ * the caller can supply either the published or the draft-or-published pair.
+ */
+const buildPublicPayload = async (
+  s: Studio,
+  themeKey: string,
+  themeConfig: PortfolioThemeConfig
+): Promise<StudioPublicData> => {
+  const ext = readSettings(s);
+
+  const galleries = await GalleryRepository.findAndCountAllScoped(s.id, {
+    where: { isActive: true },
+    order: [['created_at', 'DESC']],
+    limit: 1,
+    offset: 0,
+    page: { page: 1, limit: 1, offset: 0 },
+  });
+  let featured: StudioPublicData['featuredPhotos'] = [];
+  if (galleries.rows[0]) {
+    const photos = await PhotoRepository.listForGallery(s.id, galleries.rows[0].id, true);
+    featured = await Promise.all(
+      photos.slice(0, 12).map(async (p) => ({
+        url: await readUrl(p.s3ThumbKey ?? p.s3Key),
+        alt: p.originalFilename ?? undefined,
+      }))
+    );
+  }
+
+  const whatsapp = ext.whatsapp ?? s.phone;
+  const [logoUrl, heroImageUrl] = await Promise.all([
+    ext.logoKey ? readUrl(ext.logoKey) : Promise.resolve<string | null>(null),
+    ext.heroImageKey ? readUrl(ext.heroImageKey) : Promise.resolve<string | null>(null),
+  ]);
+
+  return {
+    name: s.name,
+    slug: s.slug,
+    theme: themeKey,
+    themeConfig,
+    tagline: ext.tagline ?? null,
+    about: ext.about ?? null,
+    address: ext.address ?? null,
+    email: s.email,
+    phone: s.phone,
+    whatsapp,
+    waLink: composeWaLink(whatsapp, ext.waLink ?? null),
+    priceInr: ext.priceInr ?? null,
+    socials: ext.socials ?? {},
+    packages: ext.packages ?? [],
+    testimonials: ext.testimonials ?? [],
+    featuredPhotos: featured,
+    logoUrl,
+    heroImageUrl,
+    heroVideoUrl: ext.heroVideoUrl ?? null,
+    stats: {
+      yearsExperience: ext.stats?.yearsExperience ?? null,
+      weddingsCount: ext.stats?.weddingsCount ?? null,
+      happyClientsCount: ext.stats?.happyClientsCount ?? null,
+      googleRating: ext.stats?.googleRating ?? null,
+    },
+  };
+};
 
 export class StudioService {
   static async getMe(studioId: string): Promise<ApiResponse> {
@@ -187,60 +280,100 @@ export class StudioService {
     try {
       const s = await StudioRepository.findBySlug(slug);
       if (!s) return buildError('Studio not found', 404);
-      const ext = readSettings(s);
-
-      const galleries = await GalleryRepository.findAndCountAllScoped(s.id, {
-        where: { isActive: true },
-        order: [['created_at', 'DESC']],
-        limit: 1,
-        offset: 0,
-        page: { page: 1, limit: 1, offset: 0 },
-      });
-      let featured: StudioPublicData['featuredPhotos'] = [];
-      if (galleries.rows[0]) {
-        const photos = await PhotoRepository.listForGallery(s.id, galleries.rows[0].id, true);
-        featured = await Promise.all(
-          photos.slice(0, 12).map(async (p) => ({
-            url: await readUrl(p.s3ThumbKey ?? p.s3Key),
-            alt: p.originalFilename ?? undefined,
-          }))
-        );
-      }
-
-      const whatsapp = ext.whatsapp ?? s.phone;
-      const [logoUrl, heroImageUrl] = await Promise.all([
-        ext.logoKey ? readUrl(ext.logoKey) : Promise.resolve<string | null>(null),
-        ext.heroImageKey ? readUrl(ext.heroImageKey) : Promise.resolve<string | null>(null),
-      ]);
-      const payload: StudioPublicData = {
-        name: s.name,
-        slug: s.slug,
-        theme: s.theme,
-        tagline: ext.tagline ?? null,
-        about: ext.about ?? null,
-        address: ext.address ?? null,
-        email: s.email,
-        phone: s.phone,
-        whatsapp,
-        waLink: composeWaLink(whatsapp, ext.waLink ?? null),
-        priceInr: ext.priceInr ?? null,
-        socials: ext.socials ?? {},
-        packages: ext.packages ?? [],
-        testimonials: ext.testimonials ?? [],
-        featuredPhotos: featured,
-        logoUrl,
-        heroImageUrl,
-        heroVideoUrl: ext.heroVideoUrl ?? null,
-        stats: {
-          yearsExperience: ext.stats?.yearsExperience ?? null,
-          weddingsCount: ext.stats?.weddingsCount ?? null,
-          happyClientsCount: ext.stats?.happyClientsCount ?? null,
-          googleRating: ext.stats?.googleRating ?? null,
-        },
-      };
+      const payload = await buildPublicPayload(s, s.theme, readThemeConfig(s));
       return buildSuccess(payload);
     } catch (error) {
       return toErrorResponse(error, 'Failed to retrieve studio portfolio');
+    }
+  }
+
+  /** GET /studios/me/theme-draft — draft preview payload, falling back to published when no draft is pending. */
+  static async getThemeDraft(studioId: string): Promise<ApiResponse<ThemeDraftPayload>> {
+    try {
+      const s = await StudioRepository.findById(studioId);
+      if (!s) return buildError('Studio not found', 404);
+
+      const isDraftDirty = s.draftTheme !== null || s.draftThemeConfig !== null;
+      const themeKey = s.draftTheme ?? s.theme;
+      const themeConfig = readDraftThemeConfig(s) ?? readThemeConfig(s);
+      const payload = await buildPublicPayload(s, themeKey, themeConfig);
+      return buildSuccess<ThemeDraftPayload>({
+        ...payload,
+        isDraftDirty,
+        draftUpdatedAt: s.draftUpdatedAt ? s.draftUpdatedAt.toISOString() : null,
+      });
+    } catch (error) {
+      return toErrorResponse(error, 'Failed to retrieve theme draft');
+    }
+  }
+
+  /** PATCH /studios/me/theme-draft — merge-patches the draft theme/config; premium-theme gating is deferred to publish. */
+  static async updateThemeDraft(studioId: string, dto: UpdateThemeDraftInput): Promise<ApiResponse> {
+    try {
+      const s = await StudioRepository.findById(studioId);
+      if (!s) return buildError('Studio not found', 404);
+
+      const baseConfig = readDraftThemeConfig(s) ?? readThemeConfig(s);
+      const nextConfig: PortfolioThemeConfig = {
+        accent: dto.themeConfig?.accent ?? baseConfig.accent,
+        headingFont: dto.themeConfig?.headingFont ?? baseConfig.headingFont,
+        sections: { ...baseConfig.sections, ...dto.themeConfig?.sections },
+      };
+
+      await StudioRepository.update(studioId, {
+        draftTheme: dto.theme ?? s.draftTheme ?? s.theme,
+        draftThemeConfig: nextConfig as Record<string, unknown>,
+        draftUpdatedAt: new Date(),
+      });
+      logger.info({ studioId }, 'Studio theme draft updated');
+      return StudioService.getThemeDraft(studioId);
+    } catch (error) {
+      return toErrorResponse(error, 'Failed to update theme draft');
+    }
+  }
+
+  /** POST /studios/me/theme-draft/publish — copies draft (or current published values) onto the live theme/config. */
+  static async publishThemeDraft(studioId: string): Promise<ApiResponse> {
+    try {
+      const s = await StudioRepository.findById(studioId);
+      if (!s) return buildError('Studio not found', 404);
+
+      const finalTheme = s.draftTheme ?? s.theme;
+      const finalConfig = readDraftThemeConfig(s) ?? readThemeConfig(s);
+
+      if (!isThemeAllowedForPlan(finalTheme, s.plan)) {
+        return buildError('Selected theme requires the Pro plan', 403);
+      }
+
+      await StudioRepository.update(studioId, {
+        theme: finalTheme,
+        themeConfig: finalConfig as Record<string, unknown>,
+        draftTheme: null,
+        draftThemeConfig: null,
+        draftUpdatedAt: null,
+      });
+      logger.info({ studioId }, 'Studio theme draft published');
+      return StudioService.getThemeDraft(studioId);
+    } catch (error) {
+      return toErrorResponse(error, 'Failed to publish theme draft');
+    }
+  }
+
+  /** DELETE /studios/me/theme-draft — discards the pending draft, reverting the editor's preview to published. */
+  static async discardThemeDraft(studioId: string): Promise<ApiResponse> {
+    try {
+      const s = await StudioRepository.findById(studioId);
+      if (!s) return buildError('Studio not found', 404);
+
+      await StudioRepository.update(studioId, {
+        draftTheme: null,
+        draftThemeConfig: null,
+        draftUpdatedAt: null,
+      });
+      logger.info({ studioId }, 'Studio theme draft discarded');
+      return StudioService.getThemeDraft(studioId);
+    } catch (error) {
+      return toErrorResponse(error, 'Failed to discard theme draft');
     }
   }
 }

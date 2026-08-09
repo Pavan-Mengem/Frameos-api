@@ -37,6 +37,14 @@ export class EventRepository {
     return Event.destroy({ where: tenantScope(studioId, { id }) });
   }
 
+  /** All of one client's bookings — used by the client portal aggregation. */
+  static findAllForClient(studioId: string, clientId: number): Promise<Event[]> {
+    return Event.findAll({
+      where: tenantScope(studioId, { clientId }),
+      order: [['eventDate', 'DESC']],
+    });
+  }
+
   /**
    * Atomically bump paid_inr — the payments module calls this from a webhook.
    * Uses a raw increment so concurrent captures on the same event never race

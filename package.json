@@ -4,7 +4,7 @@
   "description": "FrameOS — Photography Studio Management & Portfolio Platform API",
   "main": "dist/index.js",
   "scripts": {
-    "dev": "tsx watch src/index.ts",
+    "dev": "npm run migrate && tsx watch src/index.ts",
     "build": "tsc",
     "start": "node dist/index.js",
     "typecheck": "tsc --noEmit",
@@ -19,6 +19,7 @@
   "dependencies": {
     "@aws-sdk/client-s3": "^3.622.0",
     "@aws-sdk/s3-request-presigner": "^3.622.0",
+    "@types/pdfkit": "^0.17.6",
     "bcryptjs": "^2.4.3",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.1",
@@ -28,6 +29,7 @@
     "express-rate-limit": "^7.4.0",
     "helmet": "^7.1.0",
     "jsonwebtoken": "^9.0.2",
+    "pdfkit": "^0.19.1",
     "pg": "^8.12.0",
     "pino": "^9.3.2",
     "pino-pretty": "^11.2.2",
@@ -45,9 +47,9 @@
     "@types/express": "^4.17.21",
     "@types/jsonwebtoken": "^9.0.6",
     "@types/node": "^20.14.11",
+    "@types/supertest": "^6.0.2",
     "@types/uuid": "^10.0.0",
     "supertest": "^7.0.0",
-    "@types/supertest": "^6.0.2",
     "tsx": "^4.16.2",
     "typescript": "^5.5.3"
   }
